@@ -56,9 +56,13 @@ Stage 2 使用“一个类别一张卡片”的审核格式，按场次整体 `d
 
 ## Stage 3：Seedance 编译
 
-只有 Stage 2 当前场次整体批准后，才开始 Stage 3。必须从第一行到最后一行完整读取[Stage 3 Seedance 唯一完整规则文件](references/seedance-prompt-rules-master.md)；其中`Core Rules — Full Canonical Version`章节直接内嵌全部核心正文，不得选择性读取、概括、压缩、改写、合并或去重。随后读取只负责输出容器的[Stage 3 输出 Schema](references/stage3-schema.md)和只负责产品能力的[Seedance 适配](references/model-seedance.md)，二者不得覆盖完整规则文件。默认只转换 Stage 1 成片主序列；覆盖镜只有用户点名时单独转换。
+只有 Stage 2 当前场次整体批准后，才开始 Stage 3。必须从第一行到最后一行完整读取[Stage 3 Seedance 唯一完整规则文件](references/seedance-prompt-rules-master.md)；其中`Core Rules — Full Canonical Version`章节直接内嵌全部核心正文，不得选择性读取、概括、压缩、改写、合并或去重。随后读取只负责输出容器的[Stage 3 输出 Schema](references/stage3-schema.md)、只负责模型路由的[Seedance 适配](references/model-seedance.md)和当前默认的[Seedance 2.5 专属适配](references/model-seedance-2.5.md)，这些文件不得覆盖完整规则正文。默认只转换 Stage 1 成片主序列；覆盖镜只有用户点名时单独转换。
 
-先规划整份分镜的片段，再逐镜编译。每个片段是独立生成任务，硬上限 `30s`，优先靠近 `27–30s`，但不得为了填满片段破坏完整动作。每个 Stage 1 镜头必须完整落在一个片段内，禁止拆成多个生成子段。换场次、换场景、换集或换工作表必须开启新片段；片段编号全局连续且不重置。
+先规划整份分镜的片段，再逐镜编译。片段决策严格按照“强制边界 → Stage 1 单镜不可拆 → `30s`硬上限 → 主体稳定性 → 连续动作完整性 → `27–30s`优先目标”执行；主体稳定性高于目标时长，不能为了靠近`27–30s`塞入过多主体。每个 Stage 1 镜头必须完整落在一个片段内，禁止拆成多个生成子段。换场次、换场景、换集或换工作表必须开启新片段；片段编号全局连续且不重置。
+
+Seedance 2.5 片段主体按唯一身份累计：同一角色、同一物理场景或同一道具身份跨镜只计一次。`1–8`个主体为稳定区间；`9–12`个为风险区间，优先在完整镜头边界拆分，不适合拆分时允许保留并在片段首镜备注；超过`12`个优先新开片段，若单个不可拆 Stage 1 镜头本身超过`12`个则停止并请用户确认。只有具有独立参考图、需要锁定视觉身份且在片段内重复出现的关键道具才计主体；功能性人物即使没有对白或独立表演，仍按一个人物主体计数，但可在生成任务中作为功能道具使用。
+
+Stage 3 默认输出`镜号｜片段｜时长｜分镜内容｜Seedance提示词`五列；只要存在任何需要阻塞、提示风险、待确认或提醒的问题，才增加`备注`列。`分镜内容`逐字合并 Stage 1 的摄影机、画面内容和音效，类别间空一行；不包含剪辑衔接。Seedance 2.5 提示词以片段内累计区间开头，使用自然的`动作/表情`和独立的条件式`情感解析`，各类别间空一行；情感解析不得污染可见动作。备注中的不同问题逐行书写，并使用`🔴`、`🟠`、`🟡`、`🔵`标明阻塞、风险、待确认和提醒；片段级问题只写在该片段首镜。
 
 Stage 3 先交付 `draft`：固定内容只显示 Stage 2 的简短中文类别名称，供用户逐镜核对分类。用户批准 draft 后，使用 `scripts/expand_stage3_fixed_prompts.py` 将类别名称机械替换为 Stage 2 已批准原文，生成 `approved`；类别名称在权威稿中完全消失，其他文字不得重新生成、润色或改变。先运行`scripts/validate_seedance_rules_master.py`确认核心母版未发生字节变化，再运行`scripts/validate_prompt_mapping.py`核对 Stage 1、Stage 2、draft 与 approved。
 

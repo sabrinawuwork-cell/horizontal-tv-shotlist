@@ -98,7 +98,7 @@ def category_map(text: str) -> tuple[dict[str, str], list[str], dict[str, str]]:
             errors.append(f"第 {line_no} 行：无配乐无字幕只允许由 Stage 3 在镜头末尾添加")
         if re.search(r"视频里?不出现红蓝色标记", prompt):
             errors.append(f"第 {line_no} 行：红蓝标记等临时限制不得进入 Stage 2")
-        if "保留人物真实皮肤质感与瑕疵" in prompt:
+        if "保留人物真实皮肤质感与瑕疵" in prompt or "保留真实的微细毛孔、肌肤纹理与皮肤质感" in prompt:
             errors.append(f"第 {line_no} 行：通用皮肤质感句由 Stage 3 按可见性添加")
         if re.search(r"电影质感|高级感|高级", prompt) and not re.search(
             r"光源|主光|侧光|逆光|照亮|阴影|照度|色温|lux|\bK\b|曝光|反差", prompt, re.I

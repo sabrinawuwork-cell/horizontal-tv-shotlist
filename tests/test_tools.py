@@ -172,10 +172,14 @@ class PromptMappingTests(unittest.TestCase):
         self.assertTrue(any("未逐字保留 Stage 1 画面内容" in error for error in errors))
         self.assertTrue(any("未保留 Stage 1 焦段 85mm" in error for error in errors))
 
-    def test_rejects_missing_stage1_edit_transition(self) -> None:
-        broken = self.draft.replace("<br>剪辑：文件停住时反应切近艾拉。", "", 1)
+    def test_rejects_stage1_edit_transition_in_stage3(self) -> None:
+        broken = self.draft.replace(
+            "<br><br>固定类别：〔光影·艾拉与凯尔〕",
+            "<br><br>剪辑：文件停住时反应切近艾拉。<br><br>固定类别：〔光影·艾拉与凯尔〕",
+            1,
+        )
         errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], broken)
-        self.assertTrue(any("缺少独立剪辑行" in error for error in errors))
+        self.assertTrue(any("不得包含剪辑类别" in error for error in errors))
 
     def test_rejects_missing_double_shot_visible_range(self) -> None:
         broken = self.draft.replace("，两人头部到腰部可见", "", 1)
@@ -183,9 +187,9 @@ class PromptMappingTests(unittest.TestCase):
         self.assertTrue(any("双人中景" in error and "头部到腰部" in error for error in errors))
 
     def test_rejects_focal_length_out_of_master_order(self) -> None:
-        broken = self.draft.replace("时长6秒。50mm，艾拉与凯尔双人中景", "时长6秒。艾拉与凯尔双人中景，50mm", 1)
+        broken = self.draft.replace("0-6秒。50mm，艾拉与凯尔双人中景", "0-6秒。艾拉与凯尔双人中景，50mm", 1)
         errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], broken)
-        self.assertTrue(any("时长后首先写焦段" in error for error in errors))
+        self.assertTrue(any("累计时间后首先写焦段" in error for error in errors))
 
     def test_rejects_incomplete_over_shoulder_control(self) -> None:
         broken = self.draft.replace("凯尔左肩虚化在画面右侧前景，", "", 1)
@@ -193,7 +197,7 @@ class PromptMappingTests(unittest.TestCase):
         self.assertTrue(any("过肩提示词缺少" in error for error in errors))
 
     def test_rejects_shot_split_or_duplicate(self) -> None:
-        broken = self.draft.replace("| 1 | 片段1 | 1B | 4.5s |", "| 1 | 片段1 | 1A | 4.5s |")
+        broken = self.draft.replace("| 1B | 片段1 | 4.5s |", "| 1A | 片段1 | 4.5s |")
         errors = validate_prompt_mapping.validate_mapping(
             self.source, [self.stage2], broken
         )
@@ -201,11 +205,90 @@ class PromptMappingTests(unittest.TestCase):
 
     def test_rejects_segment_over_thirty(self) -> None:
         broken_source = self.source.replace("| 1 | 1C | 8s |", "| 1 | 1C | 20s |").replace("total_duration: 18.5s", "total_duration: 30.5s").replace("场次时长：18.5s", "场次时长：30.5s")
-        broken = self.draft.replace("| 1 | 片段1 | 1C | 8s | 时长8秒。", "| 1 | 片段1 | 1C | 20s | 时长20秒。")
+        broken = self.draft.replace("| 1C | 片段1 | 8s |", "| 1C | 片段1 | 20s |", 1).replace("10.5-18.5秒。", "10.5-30.5秒。", 1)
         errors = validate_prompt_mapping.validate_mapping(
             broken_source, [self.stage2], broken
         )
         self.assertTrue(any("超过30s硬上限" in error for error in errors))
+
+    def test_rejects_wrong_segment_cumulative_time(self) -> None:
+        broken = self.draft.replace("6-10.5秒。", "0-4.5秒。", 1)
+        errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], broken)
+        self.assertTrue(any("第一句必须为 6-10.5秒" in error for error in errors))
+
+    def test_rejects_seedance25_format_under_other_model(self) -> None:
+        broken = self.draft.replace("model: seedance-2.5", "model: seedance-2.0", 1)
+        errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], broken)
+        self.assertTrue(any("只允许 model: seedance-2.5" in error for error in errors))
+
+    def test_rejects_storyboard_without_blank_category_lines(self) -> None:
+        broken = self.draft.replace("。<br><br>画面内容：", "。<br>画面内容：", 1)
+        errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], broken)
+        self.assertTrue(any("分镜内容三类别之间必须空一行" in error for error in errors))
+
+    def test_rejects_legacy_scene_column(self) -> None:
+        broken = self.draft.replace(
+            "| 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词 |",
+            "| 场次 | 片段 | 镜号 | 时长 | Seedance提示词 |",
+            1,
+        )
+        errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], broken)
+        self.assertTrue(any("表头必须精确" in error for error in errors))
+
+    def test_conditional_notes_column(self) -> None:
+        lines = self.draft.splitlines()
+        output = []
+        for line in lines:
+            if line == "| 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词 |":
+                output.append("| 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词 | 备注 |")
+            elif line == "| --- | --- | --- | --- | --- |":
+                output.append("| --- | --- | --- | --- | --- | --- |")
+            elif line.startswith("| 1A |"):
+                output.append(line[:-2] + " | 🟠【主体风险】当前片段累计9个主体。<br>🟡【情感待确认】艾拉此处更偏拒绝还是试探？ |")
+            elif line.startswith(("| 1B |", "| 1C |")):
+                output.append(line[:-2] + " |  |")
+            else:
+                output.append(line)
+        noted = "\n".join(output) + "\n"
+        self.assertEqual(validate_prompt_mapping.validate_mapping(self.source, [self.stage2], noted), [])
+
+        blank = noted.replace("🟠【主体风险】当前片段累计9个主体。<br>🟡【情感待确认】艾拉此处更偏拒绝还是试探？", "")
+        errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], blank)
+        self.assertTrue(any("不得保留空的备注列" in error for error in errors))
+
+    def test_rejects_legacy_note_format(self) -> None:
+        lines = self.draft.splitlines()
+        output = []
+        for line in lines:
+            if line == "| 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词 |":
+                output.append("| 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词 | 备注 |")
+            elif line == "| --- | --- | --- | --- | --- |":
+                output.append("| --- | --- | --- | --- | --- | --- |")
+            elif line.startswith("| 1A |"):
+                output.append(line[:-2] + " | 待确认：〔旧格式〕 |")
+            elif line.startswith(("| 1B |", "| 1C |")):
+                output.append(line[:-2] + " |  |")
+            else:
+                output.append(line)
+        errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], "\n".join(output) + "\n")
+        self.assertTrue(any("备注每个问题必须逐行使用" in error for error in errors))
+
+    def test_rejects_segment_subject_note_after_first_shot(self) -> None:
+        lines = self.draft.splitlines()
+        output = []
+        for line in lines:
+            if line == "| 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词 |":
+                output.append("| 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词 | 备注 |")
+            elif line == "| --- | --- | --- | --- | --- |":
+                output.append("| --- | --- | --- | --- | --- | --- |")
+            elif line.startswith("| 1B |"):
+                output.append(line[:-2] + " | 🟠【主体风险】当前片段累计9个主体。 |")
+            elif line.startswith(("| 1A |", "| 1C |")):
+                output.append(line[:-2] + " |  |")
+            else:
+                output.append(line)
+        errors = validate_prompt_mapping.validate_mapping(self.source, [self.stage2], "\n".join(output) + "\n")
+        self.assertTrue(any("片段级主体问题只能写在片段首镜" in error for error in errors))
 
     def test_rejects_unknown_category_and_nonmechanical_approved(self) -> None:
         broken = self.draft.replace("〔光影·艾拉与凯尔〕", "〔光影·虚构方向〕", 1)
@@ -284,7 +367,7 @@ class Stage2ValidationTests(unittest.TestCase):
         text = (FIXTURES / "sample-stage2-approved.md").read_text(encoding="utf-8")
         text = text.replace(
             "整体低照度、中高反差、冷静克制的真实电影质感。",
-            "整体低照度、中高反差、冷静克制的真实电影质感。保留人物真实皮肤质感与瑕疵。",
+            "整体低照度、中高反差、冷静克制的真实电影质感。保留真实的微细毛孔、肌肤纹理与皮肤质感。",
             1,
         )
         _categories, errors, _values = validate_stage2_fixed_prompts.category_map(text)
@@ -321,6 +404,20 @@ class SeedanceRulesMasterTests(unittest.TestCase):
     def test_master_is_byte_identical_to_user_authority(self) -> None:
         master = ROOT / "references" / "seedance-prompt-rules-master.md"
         self.assertEqual(validate_seedance_rules_master.validate(master), [])
+
+    def test_seedance25_subject_budget_rules_are_present(self) -> None:
+        text = (ROOT / "references" / "model-seedance-2.5.md").read_text(encoding="utf-8")
+        for phrase in (
+            "片段累计主体按“唯一身份”计算",
+            "`1–8`个主体：稳定区间",
+            "`9–12`个主体：风险区间",
+            "超过`12`个主体",
+            "具有独立参考图",
+            "功能性人物或人物道具",
+            "超过`5`个主体时优先使用单视图",
+            "同一身份的多张角度图仍只计一个主体",
+        ):
+            self.assertIn(phrase, text)
 
 
 class ProjectStateTests(unittest.TestCase):

@@ -1,7 +1,7 @@
 interface:
   display_name: "横屏剧集分镜导演"
   short_description: "三阶段设计横屏剧集分镜、极简固定条件与完整规则Seedance提示词"
-  default_prompt: "使用 $horizontal-tv-shotlist 先结合剧本和场景图制作七列 Stage 1 横屏导演分镜；经我批准后建立 Stage 2 极简固定提示词，最后完整读取不可压缩的核心规则母版，生成可审核分类并机械展开的 Stage 3 Seedance 五列提示词。"
+  default_prompt: "使用 $horizontal-tv-shotlist 先结合剧本和场景图制作七列 Stage 1 横屏导演分镜；经我批准后建立 Stage 2 极简固定提示词，最后完整读取不可压缩的核心规则母版，按 Seedance 2.5 的主体预算、自然动作/表情、条件式情感解析和通用问题备注生成 Stage 3 五列提示词。"
 
 policy:
   allow_implicit_invocation: true
