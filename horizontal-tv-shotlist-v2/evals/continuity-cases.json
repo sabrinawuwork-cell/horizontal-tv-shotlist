@@ -1,0 +1,8 @@
+[
+  {"id":"axis-crossing","input":"两人隔桌对坐，第三镜随机换到轴线另一侧。","must_detect":["人物左右翻转","缺少合法越轴过程"],"pass_condition":"通过轴上镜头、连续移动或人物跨轴建立新轴线。"},
+  {"id":"eyeline-height","input":"坐姿人物看站姿人物却在反打中向下看。","must_detect":["视线高度不匹配"],"pass_condition":"明确站坐高度和相向视线。"},
+  {"id":"prop-hand-direction","input":"人物右手递枪，下一镜枪无交代出现在其左手且枪口翻转。","must_detect":["左右手跳变","道具方向跳变"],"pass_condition":"递交、接触、换手和枪口轨迹连续。"},
+  {"id":"action-match","input":"中景人物刚抬手，下一近景已经完成推门、进屋并落座。","must_detect":["动作阶段缺口"],"pass_condition":"准备、启动、过程与结果由镜头链可读承担。"},
+  {"id":"relationship-result","input":"争吵结束后最终镜头仍与开场构图、距离和人物位置完全相同。","must_detect":["关系结果不可见"],"pass_condition":"最终位置、距离、视线或构图体现关系变化。"},
+  {"id":"room-layout","input":"反打后门窗与座位左右镜像。","must_detect":["场景布局跳变"],"pass_condition":"门窗、家具、座位和入口维持场景坐标。"}
+]

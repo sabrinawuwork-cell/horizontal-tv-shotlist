@@ -1,7 +1,7 @@
 interface:
   display_name: "横屏剧集分镜导演 V2"
-  short_description: "三阶段横屏剧集分镜、固定条件与Seedance提示词"
-  default_prompt: "使用 $horizontal-tv-shotlist-v2 根据剧本、场景图和项目配置制作横屏剧集分镜，并依次完成 Stage 1、Stage 2 和 Stage 3。"
+  short_description: "完整继承V1格式并增加医疗正剧与Seedance 2.5规则"
+  default_prompt: "使用 $horizontal-tv-shotlist-v2，在保持 V1 镜号、摄影机和全部输出格式完全不变的前提下，完成 Stage 1、Stage 2，并在审核通过后直接生成 Stage 3 approved 提示词。"
 
 policy:
   allow_implicit_invocation: true

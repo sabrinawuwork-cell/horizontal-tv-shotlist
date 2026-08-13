@@ -1,59 +1,77 @@
 ---
 name: horizontal-tv-shotlist-v2
-description: 将完整一集或指定场次剧本设计为北美流媒体单机位横屏电视剧 AI 视频分镜，并按“Stage 1 七列导演分镜 → Stage 2 场次固定类别 → Stage 3 Seedance 2.5 五列 approved 提示词”交付。用于 16:9 或用户指定横屏比例的对白、关系、悬疑、动作、群戏、历史战争背景与医疗正剧；也用于场景图空间分析、Blocking、轴线与光影连续性、反应覆盖、平台敏感词预检和 EP4/EP6 类问题回归。不得用于竖屏短剧、多机位棚拍喜剧或未经批准跨阶段生成。
+description: 在完整继承 horizontal-tv-shotlist V1 镜号、摄影机、画面内容和全部输出格式的前提下，把完整一集或指定场次剧本设计为北美流媒体单机位横屏电视剧 AI 视频分镜，并按“Stage 1 七列导演分镜 → Stage 2 场次固定提示词 → Stage 3 Seedance 2.5 五列 approved 提示词”交付。用于 16:9 或用户指定横屏比例的对白、关系、悬疑、动作、群戏、历史战争背景与医疗正剧；也用于空间/光影分析、Blocking、轴线、反应覆盖、平台敏感词预检和匿名历史制作问题回归。不用于竖屏短剧、多机位棚拍喜剧或未经批准跨阶段生成。
 ---
 
-# 横屏剧集分镜导演 V2
+# Horizontal TV Shotlist V2
 
-作为独立 V2 工作，不读取或依赖 V1、竖屏技能或单项目文件。项目人物、场景、服装、道具、伤处、轴线和光源位置只来自本次输入，不写回技能。
+作为 V1 的格式兼容升级版工作，不读取或依赖竖屏技能的运行时文件。先完整读取[ V1 兼容性契约](references/v1-compatibility-contract.md)；除其中列出的用户明确批准差异外，V1 的规则、示例、镜号、七列/五列字段、摄影机句式和验证行为全部保持原样。严格隔离三个阶段：Stage 1 决定导演镜头；Stage 2 锁定场次级固定提示词；Stage 3 编译 Seedance 生成提示词。后阶段不得反向改写前阶段权威内容。
 
-## 权威顺序
+## 规则加载与优先级
 
-冲突时依次服从：用户当前明确修改 → 受保护剧本事实与对白 → 已批准上游阶段 → 当前项目配置与参考图 → 题材模块 → 全题材通用规则。平台措辞调整不得改变剧本事实、事件顺序、动作强度或受保护对白。
+开始 Stage 1 前完整读取[横屏镜头语言规则库](references/horizontal-shot-language-rules.md)，并依次读取[横屏导演核心](references/director-core.md)、[Stage 1 摄影机与画面写法](references/stage1-camera-picture-writing.md)、[北美单机位方法](references/north-american-single-camera.md)、对应的[场景模板](references/scene-templates.md)、[AI 制作边界](references/ai-production-constraints.md)、[V2 Stage 1 已批准新增规则](references/v2-stage1-authorized-additions.md)与[项目临时输入 Schema](references/project-input-schema.md)。战争历史背景或医疗正剧任务另行完整读取[战争历史背景＋医疗正剧题材模块](references/war-medical-drama-profile.md)；其他题材不得加载该模块。完成创作后先读取 V1 [连续性检查表](references/continuity-checklist.md)，再读取[V2 新增 Checklist](references/v2-continuity-additions.md)，最后严格按 V1 [七列输出 Schema](references/output-schema.md)成稿。
 
-## 必须加载的文件
+冲突时严格依次保护：
 
-- 开始任何项目时，完整读取[项目输入 Schema](references/project-input-schema.md)。
-- 执行 Stage 1 时，完整读取[Stage 1 导演分镜规则](references/stage1-directing-rules.md)；创作完成后读取[连续性检查表](references/continuity-checklist.md)。
-- 战争历史背景、医疗、伤员、撤离或历史低照度场景，额外完整读取[战争历史背景＋医疗正剧模块](references/war-medical-drama-profile.md)。该模块不得覆盖通用硬规则。
-- 执行 Stage 2 时，完整读取[Stage 2 固定提示词规则](references/stage2-fixed-prompt-rules.md)。
-- 执行 Stage 3 时，完整读取[Stage 3 Seedance 2.5 规则](references/stage3-seedance-rules.md)和[平台安全语言](references/platform-safety-language.md)，并再次读取连续性检查表的 Stage 3 部分。
-- 修改技能或回归时，读取[回归案例](references/regression-cases.md)，运行`scripts/validate_prompts.py --self-test`。
+1. 剧情、人物关系、事件顺序和关键信息不变。
+2. 空间、轴线、视线、动作方向、左右手、道具方向、布局、伤口和服装状态正确。
+3. 当前 Beat 的信息、情绪和权力变化准确。
+4. 镜头可执行、可剪辑，并符合 AI 制作硬约束。
+5. 最后才考虑景别、焦段、运镜、构图、时长和风格。
 
-## 固定工作顺序
+## Stage 1：横屏导演分镜
 
-**剧本事实核对 → 戏剧 Beat → 空间与光源图 → Blocking 与轴线 → 主剪辑镜头 → 备用覆盖镜头 → 景别升级曲线 → 运镜层级 → 连续性复核 → Stage 2 固定类别 → Stage 3 逐镜编译 → Checklist 与敏感词复核。**
+执行顺序固定为：**剧情事实与人物关系 → 场次目标 → 戏剧 Beat → 空间布局 → 主轴线 → 人物 Blocking → 主镜头设计 → 必要覆盖镜头 → 信息与反应镜头 → 剪辑节奏 → 连续性复核。**“主镜头设计”指成片主序列的核心设计，不要求每场存在 Master Shot。
 
-不得因 Seedance 限制反向改写 Stage 1。发现上游问题时退回对应阶段，不在后续阶段静默修复。
+### 输入与场景图门禁
 
-## 阶段门禁
+- 有整集时先读整集，再交付指定范围；逐项锁定原文事件、对白、说话人、因果、程度、顺序和结果。
+- 每个待设计场次必须有场景图。缺少时暂停；只有用户明确授权，才可制作带阻塞标记的临时文字草案，不得把推断当权威空间。
+- 场景图是建筑、家具、陈设、门窗、背景、光源、色调和氛围的外观权威。若目标机位所见背景不能从素材可靠判断，索取补图或文字确认，不虚构反打背景。
+- 根据场景图和人物动线建立空间图、主光源、基础全景机位与主轴线。用户给出的主光源优先；未给出且图中足够明确时可判断，存在歧义必须询问。
+- 默认角色采用 far-side key。记录每个基础机位中逻辑光源方向、亮面/暗面和摄影机侧别，并维持到人物转向、换位或动线改变。
+- 若换位后无法维持 far-side key，不得静默换光、越轴或改 Blocking；返回用户确认应调整人物动线、站位、机位还是逻辑光源。
 
-### Stage 1
+### 创作与约束
 
-有整集剧本时先读完整一集，再交付指定范围。结合场景图和项目配置制作七列分镜：`场次｜镜号｜时长｜摄影机｜画面内容｜音效｜剪辑衔接`。新稿和修订稿均为`draft`；用户按场次整体确认后才标记`approved`。
+- 先用横向构图、纵深、距离、遮挡和走位完成戏；只有观看任务、策略、关系、信息或动作阶段真正变化时切镜。
+- 不设置运动镜头比例，不把重要台词统一缓推，不机械“谁说话切谁”，不滥用远景、长镜、环绕、荷兰角或浅景深，不把横屏写成扩宽的竖屏。
+- 亲密、暧昧、拉扯及重要双人/三人关系戏中，每个关键关系 Beat 必须至少有一个可独立读取人物变化的镜头，可使用单人、过肩反应、近景/大近景或具有关系功能的身体/道具特写。共享双人/多人镜头不能替代该镜头；这是一项逐 Beat 硬检查，不转化为固定镜头比例。
+- 每镜先确定主要叙事功能、第一主体、第二主体和背景信息，再决定景别、具体毫米焦段、机位高度、角度、景深和运动。
+- 每镜时长必须由完整台词、动作链、反应与沉默所需时间反推，不得先套默认时长。具体判断尺度、长台词/持续表演计算和复杂调度要求必须执行[V2 Stage 1 已批准新增规则](references/v2-stage1-authorized-additions.md)。`20–30s`仍必须获得镜号级授权，任何镜头不得超过`30s`。
+- 每镜最多四名主动人物；超出时必须由用户点名授权。其他人物只能是稳定背景或单一反应层。
+- 技术复核只能退回导演阶段最小修订，不能自行补保险镜或改变节奏。
 
-### Stage 2
+### Stage 1 输出与批准
 
-只有当前场次 Stage 1 为`approved`才启动。只建立会跨多个镜头稳定复用、容易漂移且实质影响生成的最少类别。Stage 2 先输出`draft`卡片；用户按场次整体确认后标记`approved`。任一必需类别未确认时不得进入 Stage 3。
+固定七列，不增减表头：`场次｜镜号｜时长｜摄影机｜画面内容｜音效｜剪辑衔接`。`摄影机`按“主体与景别 → 具体毫米焦段 → 相对位置 → 高度与角度 → 固定/手持/运动”书写；焦段直接写`50mm`等数值，运动只写类型、方向和必要速度。`画面内容`用一段连续自然语言展开可见起始状态、运镜触发、动作/台词、结果与最终状态，不显示主要功能、第一主体、轴线或连续性证明。
 
-### Stage 3
+每次完成 Stage 1 新稿或局部修订后，按当前成片主序列的实际行序重新整理镜号为连续字母，跳过`I/O`；临时插镜后缀只用于修订过程，提交批准前必须并入连续字母序列。同步更新受影响的剪辑引用、授权字段、摘要和 Excel；备用覆盖继续使用`-COV`，不参与主序列重排。
 
-只有当前范围的 Stage 1 与 Stage 2 均为`approved`才启动。生成前先执行敏感词、参考图、轴线、肩侧、动作状态和固定类别映射预检；存在未解决问题时只输出“Stage 3 生成前阻塞清单”，不得生成提示词稿。
+Markdown 是唯一权威底稿，Excel 仅由 Markdown 单向生成。新稿与修订稿均为 `draft`；用户批准当前完整场次/范围后才晋升 `approved`。运行 `scripts/validate_shotlist.py` 后再生成 Excel。
 
-预检通过后直接生成完整展开的 Stage 3 `approved`，不生成 Stage 3 draft，也不设置二次批准门禁。输出固定为`镜号｜片段｜时长｜分镜内容｜Seedance提示词`；确有问题或已接受风险时才增加`备注`列。最终提示词直接展开为自然的`声音、光影、群演、环境`等类别，不出现`固定类别：`、类别占位符或类别名称。
+## Stage 2：场次固定提示词
 
-## 状态与修订
+只有 Stage 1 已批准，才读取从 V1 精确派生的[V2 Stage 2 极简固定提示词协议](references/v2-stage2-fixed-prompts.md)、[固定提示词格式](references/stage2-prompt-format.md)、[V2 Stage 2 输出 Schema](references/v2-stage2-schema.md)与[V2 Stage 2 已批准新增规则](references/v2-stage2-authorized-additions.md)。Stage 2 只锁定会在多个镜头反复使用、容易漂移且实质影响生成的最少条件；基础音色在 V2 默认不创建，只有用户在当前任务中明确要求时才创建。室外场次必须先判断持续环境变化是否需要环境卡；人物换位、摄影机换侧或轴线改变后，必须重算人物—机位—光源映射。不得按景别、焦段、机位、过肩、正反打、姿态或关系 Beat 拆分光影；独立背景只在不同背景方向反复出现、影响空间识别且参考图无法稳定控制时建立；彻底禁用复合`固定视觉·`类别。
 
-保持无关镜号、文字、类别、片段和批准状态稳定。用户对单个项目的修改只作用于该项目；只有用户明确要求优化技能时，才迁移为通用规则或题材模块。跨集状态只从用户明确批准的分镜更新。
+Stage 2 使用“一个类别一张卡片”的审核格式，按场次整体 `draft/approved`。建立任何类别前先做必要性测试；“不建立”是有效结果，不得为填满 Schema 制造类别。任一必需类别未确认时不得进入 Stage 3。它不能改变或复述 Stage 1 的镜号、顺序、切点、时长、摄影机、Blocking、动作、表演、对白、瞬时声音或落幅，也不展示`无配乐无字幕`及临时负面限制。V2固定卡使用`scripts/validate_v2_stage2.py`校验；既有`scripts/validate_stage2_fixed_prompts.py`只用于V1兼容回归。
 
-## 验证
+## Stage 3：Seedance 编译
 
-完成 V2 文件修改后依次运行：
+只有 Stage 2 当前场次整体批准后，才开始 Stage 3。必须从第一行到最后一行完整读取从 V1 精确派生的[V2 Stage 3 Seedance 唯一完整规则文件](references/v2-seedance-prompt-rules-master.md)；其中`Core Rules — Full Canonical Version`章节与 V1 逐字节一致，不得选择性读取、概括、压缩、改写、合并或去重。随后读取从 V1 精确派生的[V2 Stage 3 输出 Schema](references/v2-stage3-schema.md)、只负责模型路由的[Seedance 适配](references/model-seedance.md)、从 V1 精确派生的[V2 Seedance 2.5 专属适配](references/v2-model-seedance-2.5.md)、[V2 Stage 3 已批准新增规则](references/v2-stage3-authorized-additions.md)与[全题材平台安全语言](references/platform-safety-language.md)。V2 派生文件只在用户明确批准的“取消 Stage 3 draft”和相关 Seedance 2.5 行为上改变旧流程，不得改变 V1 五列格式或核心长规则正文。默认只转换 Stage 1 成片主序列；覆盖镜只有用户点名时单独转换。
 
-```bash
-python3 /Users/wuxiaoyu/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>
-python3 scripts/validate_prompts.py --skill-root .
-python3 scripts/validate_prompts.py --self-test
-```
+先规划整份分镜的片段，再逐镜编译。片段决策严格按照“强制边界 → Stage 1 单镜不可拆 → `30s`硬上限 → 主体稳定性 → 连续动作完整性 → `27–30s`优先目标”执行；主体稳定性高于目标时长，不能为了靠近`27–30s`塞入过多主体。每个 Stage 1 镜头必须完整落在一个片段内，禁止拆成多个生成子段。换场次、换场景、换集或换工作表必须开启新片段；片段编号全局连续且不重置。
 
-结构脚本只证明格式和显式约束通过，不能替代导演质量判断。代表性结果仍需用户批准。
+Seedance 2.5 片段主体按唯一身份累计：同一角色、同一物理场景或同一道具身份跨镜只计一次。`1–8`个主体为稳定区间；`9–12`个为风险区间，优先在完整镜头边界拆分，不适合拆分时允许保留并在片段首镜备注；超过`12`个优先新开片段，若单个不可拆 Stage 1 镜头本身超过`12`个则停止并请用户确认。只有具有独立参考图、需要锁定视觉身份且在片段内重复出现的关键道具才计主体；功能性人物即使没有对白或独立表演，仍按一个人物主体计数，但可在生成任务中作为功能道具使用。
+
+Stage 3 默认输出`镜号｜片段｜时长｜分镜内容｜Seedance提示词`五列；只要存在任何需要阻塞、提示风险、待确认或提醒的问题，才增加`备注`列。`分镜内容`逐字合并 Stage 1 的摄影机、画面内容和音效，类别间空一行；不包含剪辑衔接。Seedance 2.5 提示词以片段内累计区间开头，使用自然的`动作/表情`和独立的条件式`情感解析`，各类别间空一行；情感解析不得污染可见动作。备注中的不同问题逐行书写，并使用`🔴`、`🟠`、`🟡`、`🔵`标明阻塞、风险、待确认和提醒；片段级问题只写在该片段首镜。
+
+进入 Stage 3 时，先按每个场次的当前主序列行序检查镜号是否已经归一化为从`A`开始的连续字母序列并跳过`I/O`。若仍有临时插镜后缀、重复、缺号、倒序或场次前缀不一致，先退回 Stage 1 完成编号归一化并同步全部引用，不得把旧镜号直接带入 Stage 3。
+
+Stage 2 approved 且镜号顺序、平台敏感词、参考图、轴线、肩侧、人物状态、动作链和固定类别映射预检全部通过后，直接生成 Stage 3 `approved`。提示词立即展开 Stage 2 已批准的实际类别正文，不生成 Stage 3 draft，不保留类别名称占位符，也不设置二次批准门禁。默认不创建、不插入、不展开任何`【角色名音色参考：】`块；只有用户在当前任务明确启用音色时才可例外。先运行`scripts/validate_seedance_rules_master.py references/v2-seedance-prompt-rules-master.md`确认核心母版未发生字节变化，再运行`scripts/validate_v1_compatibility.py`确认 V1 格式文件未被改动，最后运行`scripts/validate_v2_prompts.py`执行V2直出校验，既有映射校验仅用于V1兼容回归；存在未解决问题时只输出生成前阻塞清单，不生成 approved。
+
+发现摄影机、轴线、Blocking 或动作问题退回 Stage 1；发现固定音色、光影、背景、环境或群演问题退回 Stage 2；Stage 3 只可澄清可见性和物理表达，不能改变前阶段权威。
+
+## 局部修订
+
+保持无关镜号、类别、文字与批准状态稳定。只传播真实受到空间、轴线、视线、动作、道具、身体、光态、时长、声音桥或片段边界影响的内容。用户对单个项目稿的反馈只作用于该稿；只有明确要求校准技能时才进入永久规则和回归测试。每次发布前还必须执行[V2 回归案例](references/v2-regression-cases.md)，其中任何格式回归都阻塞发布。

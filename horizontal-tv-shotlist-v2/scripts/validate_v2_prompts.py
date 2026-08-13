@@ -9,20 +9,37 @@ import re
 import sys
 from pathlib import Path
 
+from shotlist_common import HEADERS as STAGE1_HEADERS, find_tables, is_coverage_table
+
 
 REQUIRED_FILES = (
     "SKILL.md",
     "agents/openai.yaml",
-    "references/stage1-directing-rules.md",
-    "references/stage2-fixed-prompt-rules.md",
-    "references/stage3-seedance-rules.md",
+    "references/v1-compatibility-contract.md",
+    "references/output-schema.md",
+    "references/stage1-camera-picture-writing.md",
+    "references/v2-stage1-authorized-additions.md",
+    "references/v2-stage2-authorized-additions.md",
+    "references/v2-stage2-fixed-prompts.md",
+    "references/v2-stage2-schema.md",
+    "references/v2-stage3-authorized-additions.md",
+    "references/v2-stage3-schema.md",
+    "references/v2-seedance-prompt-rules-master.md",
+    "references/v2-model-seedance-2.5.md",
     "references/war-medical-drama-profile.md",
     "references/project-input-schema.md",
     "references/platform-safety-language.md",
     "references/continuity-checklist.md",
-    "references/regression-cases.md",
-    "scripts/validate_prompts.py",
-    "evals/regression-cases.json",
+    "references/v2-continuity-additions.md",
+    "references/v2-regression-cases.md",
+    "scripts/validate_v1_compatibility.py",
+    "scripts/validate_v2_prompts.py",
+    "scripts/validate_v2_stage2.py",
+    "evals/v2-regression-cases.json",
+    "tests/test_v2_iteration.py",
+    "tests/fixtures/v2-stage1-dialogue-approved.md",
+    "tests/fixtures/v2-stage3-approved.md",
+    "tests/fixtures/v2-stage2-no-voice-approved.md",
 )
 
 STAGE3_HEADERS = (
@@ -46,6 +63,15 @@ CATEGORY_LABELS = (
 QUOTE_RE = re.compile(r"“[^”]*”|‘[^’]*’|\"[^\"]*\"")
 TIME_RE = re.compile(r"^\d+(?:\.\d+)?-\d+(?:\.\d+)?秒。")
 MM_RE = re.compile(r"(?<!\d)\d{2,3}mm(?!\w)", re.I)
+SHOT_RE = re.compile(r"^\d+([A-Z]+)(?:-\d+|-COV\d+)?$")
+NORMALIZED_SHOT_RE = re.compile(
+    r"^(?P<scene>\d+(?:-\d+)?)(?P<letters>[A-HJ-NP-Z]+)(?P<suffix>-\d+|-COV\d+)?$"
+)
+SHOT_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+VOICE_REFERENCE_RE = re.compile(r"【[^\n】]{0,40}音色参考：】")
+CONTEXT_DEPENDENT_RE = re.compile(r"已经|仍然|仍在|继续上一(?:镜|片段)|延续上一片段|保持既定轴线")
+FINAL_STATE_RE = re.compile(r"最终|落幅|镜头结束|镜头停|停止运动")
+FINAL_STATE_DETAIL_RE = re.compile(r"位于|站在|坐在|跪在|躺在|画面左|画面右|前景|后景")
 
 
 def read_text(path: Path) -> str:
@@ -150,7 +176,12 @@ def blank_line_errors(prompt: str) -> list[str]:
     return errors
 
 
-def prompt_errors(prompt: str, authorized: set[str]) -> list[str]:
+def prompt_errors(
+    prompt: str,
+    authorized: set[str],
+    *,
+    allow_voice_reference: bool = False,
+) -> list[str]:
     errors: list[str] = []
     normalized = prompt.replace("<br><br>", "\n\n").replace("<br />", "\n").replace("<br>", "\n").strip()
     if not TIME_RE.match(normalized):
@@ -169,6 +200,8 @@ def prompt_errors(prompt: str, authorized: set[str]) -> list[str]:
         errors.append("镜外角色不得进入视觉站位或视线对象描述")
     if re.search(r"(?:^|\n\n)音色：", normalized):
         errors.append("音色必须合入声音类别，不得建立独立音色块")
+    if VOICE_REFERENCE_RE.search(normalized) and not allow_voice_reference:
+        errors.append("默认输出不得出现【角色名音色参考：】块；只有当前任务明确启用时才允许")
     order = ("画面：", "动作/表情：", "情感解析：", "声音：", "光影：", "背景：", "环境：", "群演：", "外观：")
     positions = [normalized.find(label) for label in order]
     present_positions = [position for position in positions if position >= 0]
@@ -177,6 +210,24 @@ def prompt_errors(prompt: str, authorized: set[str]) -> list[str]:
     errors.extend(blank_line_errors(prompt))
     errors.extend(duplicate_errors(prompt))
     errors.extend(light_errors(prompt))
+
+    blocks = [item.strip() for item in normalized.split("\n\n") if item.strip()]
+    picture = next((item[len("画面：") :] for item in blocks if item.startswith("画面：")), "")
+    action = next((item[len("动作/表情：") :] for item in blocks if item.startswith("动作/表情：")), "")
+    sound = next((item[len("声音：") :] for item in blocks if item.startswith("声音：")), "")
+    if re.search(r"最终|落幅|镜头结束|镜头停|摄影机(?:推|拉|横移|摇|升|降|环绕|跟随)", picture):
+        errors.append("画面类别只能写起幅，不得提前写运镜过程或落幅")
+    first_block = blocks[0] if blocks else ""
+    has_camera_movement = any(token in first_block for token in ("推近", "拉远", "横移", "摇镜", "跟随", "升起", "下降", "环绕", "变焦"))
+    if has_camera_movement and not any(token in action for token in ("摄影机", "镜头")):
+        errors.append("运动镜头必须在动作/表情类别中按时间顺序写明运镜过程")
+    if has_camera_movement and not FINAL_STATE_RE.search(action):
+        errors.append("运动镜头的动作/表情类别缺少落幅或停稳状态")
+    if QUOTE_RE.search(sound):
+        errors.append("声音类别不得重复动作/表情中的对白")
+    for vocal in ("哭声", "笑声"):
+        if vocal in action and vocal in sound:
+            errors.append(f"声音类别重复动作/表情中已写明的{vocal}")
 
     quotes = quoted_terms(normalized)
     non_dialogue = remove_quotes(normalized)
@@ -193,7 +244,64 @@ def prompt_errors(prompt: str, authorized: set[str]) -> list[str]:
     return errors
 
 
-def validate_stage3(path: Path) -> list[str]:
+def normalized_shot_sequence_errors(shots: list[str]) -> list[str]:
+    errors: list[str] = []
+    parsed: list[tuple[str, str, str | None]] = []
+    for shot in shots:
+        match = NORMALIZED_SHOT_RE.fullmatch(shot)
+        if not match:
+            errors.append(f"镜号格式不符合场次加连续字母规则：{shot}")
+            continue
+        parsed.append((match.group("scene"), match.group("letters"), match.group("suffix")))
+    if errors:
+        return errors
+    if len(set(shots)) != len(shots):
+        errors.append("主序列镜号存在重复")
+
+    scene_order: list[str] = []
+    scene_letters: dict[str, list[tuple[str, str | None]]] = {}
+    for scene, letters, suffix in parsed:
+        if scene not in scene_letters:
+            scene_order.append(scene)
+            scene_letters[scene] = []
+        elif scene_order[-1] != scene:
+            errors.append(f"场次 {scene} 的镜号没有保持连续分组")
+        scene_letters[scene].append((letters, suffix))
+
+    def rank(letters: str) -> int:
+        value = 0
+        for letter in letters:
+            value = value * len(SHOT_ALPHABET) + SHOT_ALPHABET.index(letter) + 1
+        return value
+
+    for scene in scene_order:
+        items = scene_letters[scene]
+        temporary = [f"{scene}{letters}{suffix}" for letters, suffix in items if suffix]
+        if temporary:
+            errors.append(f"场次 {scene} 仍含未归一化的临时后缀镜号：{'、'.join(temporary)}")
+        actual = [rank(letters) for letters, _suffix in items]
+        expected = list(range(1, len(items) + 1))
+        if actual != expected:
+            errors.append(f"场次 {scene} 主序列镜号未按行序从A连续递进并跳过I/O")
+    return errors
+
+
+def stage1_dialogue_by_shot(text: str) -> dict[str, list[str]]:
+    result: dict[str, list[str]] = {}
+    for table in find_tables(text):
+        if table.headers != STAGE1_HEADERS or is_coverage_table(table):
+            continue
+        for row in table.rows:
+            result[row[1].strip().upper()] = QUOTE_RE.findall(row[4])
+    return result
+
+
+def validate_stage3(
+    path: Path,
+    *,
+    stage1_path: Path | None = None,
+    allow_voice_reference: bool = False,
+) -> list[str]:
     text = read_text(path)
     errors: list[str] = []
     front = parse_frontmatter(text)
@@ -230,15 +338,39 @@ def validate_stage3(path: Path) -> list[str]:
         return errors + ["没有找到精确五列或条件式六列Stage 3表"]
     if not rows:
         errors.append("Stage 3表没有镜头行")
+    errors.extend(normalized_shot_sequence_errors([row[0] for row in rows]))
     authorized = {
         item.strip()
         for item in front.get("dialogue_sensitive_authorizations", "").split(",")
         if item.strip() and item.strip().lower() != "none"
     }
+    source_dialogue: dict[str, list[str]] = {}
+    if stage1_path is None:
+        errors.append("Stage 3校验必须同时提供Stage 1 approved以执行台词逐句比对")
+    else:
+        source_dialogue = stage1_dialogue_by_shot(read_text(stage1_path))
     for row_number, row in enumerate(rows, 1):
         shot = row[0] or f"第{row_number}行"
-        for error in prompt_errors(row[4], authorized):
+        for error in prompt_errors(row[4], authorized, allow_voice_reference=allow_voice_reference):
             errors.append(f"镜头{shot}：{error}")
+        for dialogue in source_dialogue.get(shot.upper(), []):
+            if dialogue not in row[4]:
+                errors.append(f"镜头{shot}：遗漏或改写Stage 1原始台词 {dialogue}")
+
+    for index, row in enumerate(rows):
+        segment = row[1]
+        prompt = row[4].replace("<br><br>", "\n\n").replace("<br />", "\n").replace("<br>", "\n")
+        first = index == 0 or rows[index - 1][1] != segment
+        last = index == len(rows) - 1 or rows[index + 1][1] != segment
+        if first and CONTEXT_DEPENDENT_RE.search(prompt):
+            errors.append(f"镜头{row[0]}：片段首镜必须使用绝对、自足状态，不得依赖上一片段")
+        if last:
+            action = next(
+                (item for item in prompt.split("\n\n") if item.startswith("动作/表情：")),
+                "",
+            )
+            if not FINAL_STATE_RE.search(action) or not FINAL_STATE_DETAIL_RE.search(action):
+                errors.append(f"镜头{row[0]}：片段末镜必须留下可重建的明确最终状态")
     return errors
 
 
@@ -258,10 +390,14 @@ def validate_structure(root: Path) -> list[str]:
         errors.append("SKILL.md frontmatter只能包含name和description")
     if front.get("name") != "horizontal-tv-shotlist-v2":
         errors.append("SKILL.md名称不正确")
-    for relative in REQUIRED_FILES[2:10]:
-        link = relative.replace("references/", "references/")
-        if link not in skill:
-            errors.append(f"SKILL.md没有直接引用：{link}")
+    routed_references = [relative for relative in REQUIRED_FILES if relative.startswith("references/")]
+    for relative in routed_references:
+        if relative not in skill and relative not in {
+            "references/output-schema.md",
+            "references/stage1-camera-picture-writing.md",
+            "references/continuity-checklist.md",
+        }:
+            errors.append(f"SKILL.md没有直接引用：{relative}")
     if "Stage 3 `approved`" not in skill or "不生成 Stage 3 draft" not in skill:
         errors.append("SKILL.md没有明确Stage 3直接approved门禁")
     runtime_dependency = re.search(r"\.\./horizontal-tv-shotlist(?:/|`)", skill)
@@ -285,7 +421,24 @@ def evaluate_case(case: dict[str, object]) -> tuple[bool, str]:
     elif kind == "light":
         valid = not light_errors(sample)
     elif kind == "prompt":
-        valid = not prompt_errors(sample, set(str(item) for item in case.get("authorized", [])))
+        valid = not prompt_errors(
+            sample,
+            set(str(item) for item in case.get("authorized", [])),
+            allow_voice_reference=bool(case.get("voice_reference_authorized", False)),
+        )
+    elif kind == "segment_boundary":
+        valid = not CONTEXT_DEPENDENT_RE.search(sample) and bool(FINAL_STATE_RE.search(sample)) and bool(FINAL_STATE_DETAIL_RE.search(sample))
+    elif kind == "conditional_categories":
+        values = dict(raw_sample) if isinstance(raw_sample, dict) else {}
+        independent_performance = bool(values.get("independent_performance", False))
+        pure_function = bool(values.get("pure_function", False))
+        extras_visible = bool(values.get("extras_visible", False))
+        tight = bool(values.get("tight_85_or_more", False))
+        has_emotion = bool(values.get("has_emotion", False))
+        has_extras = bool(values.get("has_extras", False))
+        emotion_valid = (not pure_function or not has_emotion) and (not independent_performance or has_emotion)
+        extras_valid = (not tight or not has_extras) and (not (extras_visible and not tight) or has_extras)
+        valid = emotion_valid and extras_valid
     elif kind == "shot_scale":
         early = [str(item) for item in case.get("early", [])]
         late = [str(item) for item in case.get("late", [])]
@@ -300,6 +453,29 @@ def evaluate_case(case: dict[str, object]) -> tuple[bool, str]:
             for key in required_keys
             for token in ("本次项目", "所属集", "待定", "approved（")
         )
+    elif kind == "shot_numbers":
+        shots = [str(item) for item in raw_sample] if isinstance(raw_sample, list) else []
+        matches = [SHOT_RE.fullmatch(shot) for shot in shots]
+        valid = bool(shots) and all(matches) and all(
+            "I" not in match.group(1) and "O" not in match.group(1)
+            for match in matches
+            if match is not None
+        )
+        for pair in case.get("required_pairs", []):
+            left, right = [str(item) for item in pair]
+            valid = valid and any(a == left and b == right for a, b in zip(shots, shots[1:]))
+    elif kind == "normalized_shot_sequence":
+        shots = [str(item) for item in raw_sample] if isinstance(raw_sample, list) else []
+        valid = bool(shots) and not normalized_shot_sequence_errors(shots)
+    elif kind == "camera_format":
+        has_subject_scale = bool(re.search(r"(?:^|，)(?:过.+?拍.+?的(?:中景|近景)|.+?的(?:全景|中景|中近景|近景|大近景|特写|POV中景))", sample))
+        has_one_focal = len(MM_RE.findall(sample)) == 1
+        is_ots = sample.startswith("过")
+        has_position = "机位在" in sample
+        has_height_angle = any(token in sample for token in ("眼平", "平视", "俯拍", "仰拍", "贴地", "胸口高度", "腰部高度"))
+        has_camera_state = any(token in sample for token in ("固定镜头", "手持镜头", "横移", "推近", "拉远", "摇镜", "跟随"))
+        valid = has_subject_scale and has_one_focal and has_height_angle and has_camera_state
+        valid = valid and ((is_ots and not has_position) or (not is_ots and has_position))
     else:
         return False, f"未知回归类型：{kind}"
     expected = bool(case.get("expected_valid", True))
@@ -307,7 +483,7 @@ def evaluate_case(case: dict[str, object]) -> tuple[bool, str]:
 
 
 def run_self_tests(root: Path) -> list[str]:
-    path = root / "evals/regression-cases.json"
+    path = root / "evals/v2-regression-cases.json"
     cases = json.loads(read_text(path))
     errors: list[str] = []
     for case in cases:
@@ -321,6 +497,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--skill-root", type=Path)
     parser.add_argument("--stage3", type=Path)
+    parser.add_argument("--stage1", type=Path)
+    parser.add_argument("--allow-voice-reference", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     root = (args.skill_root or Path(__file__).resolve().parents[1]).resolve()
@@ -328,7 +506,13 @@ def main() -> int:
     if args.skill_root or not args.stage3:
         errors.extend(validate_structure(root))
     if args.stage3:
-        errors.extend(validate_stage3(args.stage3.resolve()))
+        errors.extend(
+            validate_stage3(
+                args.stage3.resolve(),
+                stage1_path=args.stage1.resolve() if args.stage1 else None,
+                allow_voice_reference=args.allow_voice_reference,
+            )
+        )
     if args.self_test:
         errors.extend(run_self_tests(root))
     if errors:
