@@ -1,7 +1,0 @@
-[
-  {"case_id":"xiaofeixia-e01","source_label":"小飞侠第一集.docx","source_class":"existing-private","distribution_allowed":false},
-  {"case_id":"ashes-reborn-good","source_label":"confidential-case-001.docx","source_class":"existing-private","distribution_allowed":false},
-  {"case_id":"vampire-girlfriend-good","source_label":"confidential-case-002.docx","source_class":"existing-private","distribution_allowed":false},
-  {"case_id":"forbidden-woman-horizontal-regression","source_label":"禁忌女医横屏实验稿及权威剧本","source_class":"existing-private-regression","distribution_allowed":false},
-  {"case_id":"synthetic-horizontal-suite","source_label":"evals/fixtures 下按 scenarios.json 创建的合成案例","source_class":"synthetic-private-development","distribution_allowed":false}
-]

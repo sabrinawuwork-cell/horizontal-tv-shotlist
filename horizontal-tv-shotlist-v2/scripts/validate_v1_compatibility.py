@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 from pathlib import Path
 
 
@@ -35,22 +36,40 @@ def main() -> int:
     args = parser.parse_args()
 
     candidate = args.candidate.resolve()
-    baseline = (args.baseline or candidate.parent / "horizontal-tv-shotlist").resolve()
-    if not baseline.is_dir():
-        print(f"ERROR: V1 baseline not found: {baseline}")
-        return 2
+    if args.baseline:
+        baseline = args.baseline.resolve()
+        if not baseline.is_dir():
+            print(f"ERROR: V1 baseline not found: {baseline}")
+            return 2
+        expected = {
+            rel: digest(source)
+            for rel, source in inherited_files(baseline).items()
+            if rel not in ALLOWED_CHANGED
+        }
+    else:
+        manifest = candidate / "references/v1-format-baseline.json"
+        if not manifest.is_file():
+            print(f"ERROR: embedded format baseline not found: {manifest}")
+            return 2
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        expected = {Path(rel): value for rel, value in payload["files"].items()}
+        if not expected:
+            print("ERROR: embedded format baseline is empty")
+            return 2
 
-    base_files = inherited_files(baseline)
     errors: list[str] = []
-    for rel, source in sorted(base_files.items()):
-        if rel in ALLOWED_CHANGED:
-            continue
+    for rel, expected_digest in sorted(expected.items()):
         target = candidate / rel
         if not target.is_file():
             errors.append(f"missing inherited file: {rel}")
             continue
-        if digest(source) != digest(target):
+        if expected_digest != digest(target):
             errors.append(f"unauthorized inherited-file change: {rel}")
+
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}")
+        return 1
 
     output_schema = (candidate / "references/output-schema.md").read_text(encoding="utf-8")
     camera_rules = (candidate / "references/stage1-camera-picture-writing.md").read_text(encoding="utf-8")
@@ -94,7 +113,7 @@ def main() -> int:
             print(f"ERROR: {error}")
         return 1
 
-    print(f"PASS: {len(base_files) - len(ALLOWED_CHANGED)} inherited V1 files are byte-identical")
+    print(f"PASS: {len(expected)} inherited format files match the baseline")
     print("PASS: Stage 1 shot-number and camera-format contracts are intact")
     print("PASS: only approved V2 overlay files are routed")
     return 0
