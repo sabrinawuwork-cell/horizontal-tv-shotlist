@@ -10,7 +10,9 @@ import sys
 
 from shotlist_common import parse_frontmatter, read_text, require_fields
 from validate_stage2_fixed_prompts import _cards
-from validate_v2_prompts import light_errors
+from validate_v2_prompts import light_errors, remove_quotes
+from v2_delivery_checks import stage2_sources
+from v2_project_inputs import ProjectPolicy, inherited_policy, project_term_errors
 
 
 REQUIRED = (
@@ -43,7 +45,9 @@ PREFIXES = (
 )
 
 
-def validate_text(text: str) -> list[str]:
+def validate_text(text: str, *, policy: ProjectPolicy | None = None) -> list[str]:
+    # File entry points supply the policy inherited from the actual Stage 1.
+    policy = policy or ProjectPolicy()
     errors: list[str] = []
     front = parse_frontmatter(text)
     errors.extend(front.errors)
@@ -62,10 +66,19 @@ def validate_text(text: str) -> list[str]:
             errors.append(f"第{line_no}行：未知V2固定类别前缀 {name}")
         if name in categories:
             errors.append(f"第{line_no}行：固定类别重复 {name}")
-        if any(token in prompt for token in ("无配乐无字幕", "【角色名音色参考：】", "保持far-side key", "保持 far-side key")):
-            errors.append(f"第{line_no}行：固定卡含Stage 3限制或抽象光影元语言")
+        expected_labels = {
+            '基础音色': ('音色：',), '场次音色': ('音色状态：', '音色：'), '阶段音色': ('音色状态：', '音色：'),
+            '光影': ('光影：',), '背景': ('背景：',), '环境': ('环境：',),
+            '群演外观': ('群演：', '外观：'), '群演动作': ('群演：',),
+            '群演光影': ('群演：', '光影：'), '场次声音': ('声音：',),
+        }.get(name.split('·', 1)[0], ())
+        if not prompt.strip() or not any(prompt.startswith(label) and prompt[len(label):].strip() for label in expected_labels):
+            errors.append(f'第{line_no}行：固定卡正文必须非空且使用与卡名对应的类别标签')
+        # Whether wording is an instruction, a quoted sign or an inadequate
+        # lighting description belongs to content review, not token matching.
         if name.startswith("光影·"):
-            errors.extend(f"第{line_no}行：{item}" for item in light_errors(prompt))
+            errors.extend(f"第{line_no}行：{item}" for item in light_errors(prompt, lighting_mode=policy.lighting_mode))
+        errors.extend(f"第{line_no}行：{item}" for item in project_term_errors(prompt, '', policy, set()))
         categories[name] = prompt
 
     speakers = [
@@ -100,16 +113,37 @@ def validate_text(text: str) -> list[str]:
         if decision == "no" and present:
             errors.append(f"{field}=no但出现{label}卡")
 
-    if values.get("status") == "approved" and re.search(r"待确认|待补|TBD", text, re.I):
-        errors.append("approved Stage 2不得含待确认项")
+    if values.get("status") == "approved":
+        unquoted = remove_quotes(re.sub(r'<br\s*/?>', '\n', text, flags=re.I))
+        if '🔴' in values.get('blocking_issues', '') or re.search(r'(?:^|[|\n])\s*(?:[-*]\s*)?🔴', unquoted):
+            errors.append("approved Stage 2不得含明确的🔴阻塞问题")
+        for name, prompt in categories.items():
+            if re.fullmatch(r'[^：\n]+：\s*(?:待确认|待补|TBD)[\s。.…]*', prompt, re.I):
+                errors.append(f"approved Stage 2固定卡{name}正文仍为待补占位符")
+        # Whether prose reports an unresolved problem, denies one, or quotes
+        # a document name belongs to content review, not a whole-file word scan.
     return errors
+
+
+def validate_file(path: Path) -> list[str]:
+    try:
+        errors, policy = inherited_policy(path)
+        errors.extend(validate_text(read_text(path), policy=policy))
+        source_errors, source = stage2_sources(path)
+        errors.extend(source_errors)
+        if source is not None:
+            from validate_v2_shotlist import validate_file as validate_stage1
+            errors.extend(validate_stage1(source))
+        return list(dict.fromkeys(errors))
+    except (OSError, UnicodeError, ValueError) as exc:
+        return [f'Stage 2 权威来源无法校验：{exc}']
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", type=Path)
     args = parser.parse_args()
-    errors = validate_text(read_text(args.path))
+    errors = validate_file(args.path.resolve())
     if errors:
         for error in errors:
             print(f"ERROR: {error}")

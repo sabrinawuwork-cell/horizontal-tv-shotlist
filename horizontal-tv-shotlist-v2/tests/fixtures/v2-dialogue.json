@@ -1,0 +1,13 @@
+{
+  "dialogue": [
+    "保留原文句A。"
+  ],
+  "source_speech": [
+    "保留原文句A。"
+  ],
+  "stage1_speech": {
+    "1A": [
+      "保留原文句A。"
+    ]
+  }
+}

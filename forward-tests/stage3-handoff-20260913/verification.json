@@ -1,0 +1,28 @@
+{
+  "scope": "已有六镜局部Stage3修订与离线导出，非干净上下文首稿试验、非媒体生成",
+  "export_exit_code": 0,
+  "upstream_and_historical_stage3_unchanged": true,
+  "source_columns_unchanged": true,
+  "dialogue_sound_and_fixed_light_unchanged": true,
+  "actions_preserved_except_two_approved_plan_details": true,
+  "task_request_byte_identical": true,
+  "maintenance": [
+    {
+      "command": [
+        "python3",
+        "horizontal-tv-shotlist-v2/scripts/validate_v1_compatibility.py"
+      ],
+      "exit_code": 0,
+      "output": "PASS: 35 baseline files verified (23 unchanged, 12 authorized method revisions)\nPASS: Stage 1 column and shot-number declarations verified; camera semantics require content review\nPASS: current V2 routing is present; this check does not assess directing quality\n"
+    },
+    {
+      "command": [
+        "python3",
+        "horizontal-tv-shotlist-v2/scripts/validate_seedance_rules_master.py",
+        "horizontal-tv-shotlist-v2/references/v2-seedance-prompt-rules-master.md"
+      ],
+      "exit_code": 0,
+      "output": "A. 8141\nB. 8141\nC. 24\nD. 24\nE. 59\nF. 59\nG. 否\nH. 否\nI. 否\nJ. 否\n检查项：原始 25，最终 25\n核心正文 SHA256：d5b5ddb60ac1c291c46535d3d769815861bae236bde5c049a1a3b6865221abaa\nOK: 核心正文逐字节、逐行、逐段完全一致\n"
+    }
+  ]
+}

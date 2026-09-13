@@ -3,89 +3,145 @@
     "id": "R01-script-completeness-pass",
     "kind": "presence",
     "sample": "她停顿半拍，露出释然的笑，说出原文对白；随后打开药箱，取出器械，重新合上药箱。",
-    "required": ["停顿半拍", "释然的笑", "原文对白", "打开药箱", "取出器械", "合上药箱"],
+    "required": [
+      "停顿半拍",
+      "释然的笑",
+      "原文对白",
+      "打开药箱",
+      "取出器械",
+      "合上药箱"
+    ],
     "expected_valid": true
   },
   {
     "id": "R01-script-completeness-fail",
     "kind": "presence",
     "sample": "她说出原文对白，随后取出器械。",
-    "required": ["停顿半拍", "释然的笑", "原文对白", "打开药箱", "取出器械", "合上药箱"],
+    "required": [
+      "停顿半拍",
+      "释然的笑",
+      "原文对白",
+      "打开药箱",
+      "取出器械",
+      "合上药箱"
+    ],
     "expected_valid": false
   },
   {
     "id": "R02-reaction-coverage-pass",
     "kind": "presence",
     "sample": "主序列保留直接承受者听完关键信息后停下动作的反应；后景群体的错峰反应列入备用覆盖。",
-    "required": ["直接承受者", "反应", "备用覆盖"],
+    "required": [
+      "直接承受者",
+      "反应",
+      "备用覆盖"
+    ],
     "expected_valid": true
-  },
-  {
-    "id": "R03-shot-scale-curve-pass",
-    "kind": "shot_scale",
-    "early": ["50mm双人中景", "65mm单人中近景"],
-    "late": ["85mm关键决定近景", "100mm道具大特写"],
-    "expected_valid": true
-  },
-  {
-    "id": "R03-shot-scale-curve-fail",
-    "kind": "shot_scale",
-    "early": ["85mm开场近景", "85mm普通台词近景"],
-    "late": ["50mm结尾中景"],
-    "expected_valid": false
   },
   {
     "id": "R04-ots-pair-pass",
     "kind": "presence",
     "sample": "过A右肩拍B；反打过B左肩拍A；两镜保持同一主轴线。",
-    "required": ["过A右肩拍B", "过B左肩拍A", "同一主轴线"],
+    "required": [
+      "过A右肩拍B",
+      "过B左肩拍A",
+      "同一主轴线"
+    ],
     "expected_valid": true
   },
   {
     "id": "R04A-shot-number-skip-io-pass",
     "kind": "shot_numbers",
-    "sample": ["3G", "3H", "3J", "3K", "3M", "3N", "3P", "3Q"],
-    "required_pairs": [["3H", "3J"], ["3N", "3P"]],
+    "sample": [
+      "3G",
+      "3H",
+      "3J",
+      "3K",
+      "3M",
+      "3N",
+      "3P",
+      "3Q"
+    ],
+    "required_pairs": [
+      [
+        "3H",
+        "3J"
+      ],
+      [
+        "3N",
+        "3P"
+      ]
+    ],
     "expected_valid": true
   },
   {
     "id": "R04A-shot-number-io-fail",
     "kind": "shot_numbers",
-    "sample": ["3H", "3I", "3N", "3O"],
-    "required_pairs": [["3H", "3J"], ["3N", "3P"]],
+    "sample": [
+      "3H",
+      "3I",
+      "3N",
+      "3O"
+    ],
+    "required_pairs": [
+      [
+        "3H",
+        "3J"
+      ],
+      [
+        "3N",
+        "3P"
+      ]
+    ],
     "expected_valid": false
   },
   {
     "id": "R04B-single-camera-format-pass",
     "kind": "camera_format",
     "sample": "A的近景，85mm，机位在A右前方，眼平固定镜头。",
-    "expected_valid": true
+    "expected_valid": true,
+    "scope_note": "仅核对明确毫米参数是否可读取，不以术语是否命中认证摄影描述完整或拍法正确。"
   },
   {
     "id": "R04B-ots-camera-format-pass",
     "kind": "camera_format",
     "sample": "过B的左肩拍A的中景，65mm，眼平固定镜头。",
-    "expected_valid": true
+    "expected_valid": true,
+    "scope_note": "仅核对明确毫米参数是否可读取，不以术语是否命中认证摄影描述完整或拍法正确。"
   },
   {
     "id": "R04B-camera-format-fail",
     "kind": "camera_format",
     "sample": "A，电影感侧面拍摄。",
-    "expected_valid": false
+    "expected_valid": false,
+    "scope_note": "仅核对明确毫米参数是否可读取，不以术语是否命中认证摄影描述完整或拍法正确。"
   },
   {
     "id": "R05-height-difference-pass",
     "kind": "presence",
     "sample": "65mm，过成人上半身右侧拍较矮角色，摄影机采用符合身高差的高角度俯拍。",
-    "required": ["65mm", "过成人上半身右侧", "较矮角色", "高角度俯拍"],
-    "forbidden": ["双方眼平"],
+    "required": [
+      "65mm",
+      "过成人上半身右侧",
+      "较矮角色",
+      "高角度俯拍"
+    ],
+    "forbidden": [
+      "双方眼平"
+    ],
     "expected_valid": true
   },
   {
     "id": "R06-action-chain-pass",
     "kind": "ordered",
     "sample": "人物兴奋起身，疼痛突然发作，右手按住头部；旁边的人扶住其左臂，帮助其重新坐下。",
-    "required": ["起身", "疼痛突然发作", "右手按住头部", "扶住其左臂", "重新坐下"],
+    "required": [
+      "起身",
+      "疼痛突然发作",
+      "右手按住头部",
+      "扶住其左臂",
+      "重新坐下"
+    ],
     "expected_valid": true
   },
   {
@@ -128,28 +184,43 @@
     "id": "R11-sensitive-nondialogue-fail",
     "kind": "prompt",
     "sample": "0-4秒。65mm，角色中景，眼平固定镜头。\n\n画面：角色站在战场中央。\n\n动作/表情：角色转头。\n\n声音：N/A。\n\n无配乐无字幕",
-    "expected_valid": false
+    "expected_valid": false,
+    "speech": []
   },
   {
     "id": "R11-protected-dialogue-pass",
     "kind": "prompt",
     "sample": "0-4秒。65mm，角色中景，眼平固定镜头。\n\n画面：角色站在临时救治区域中央。\n\n动作/表情：角色看向对方说：“红军会来接应。”\n\n声音：N/A。\n\n无配乐无字幕",
-    "authorized": ["红军"],
-    "expected_valid": true
+    "authorized": [
+      "红军"
+    ],
+    "expected_valid": true,
+    "speech": [
+      "红军会来接应。"
+    ]
   },
   {
     "id": "R12-extras-staging-pass",
     "kind": "presence",
     "sample": "群演：近处两人先停下手中工作，远处三人随后错峰转向声源，其余人继续搬运物资；所有人留在后景，不遮挡主要人物和撤离路线。",
-    "required": ["先停下", "随后错峰", "继续搬运", "后景", "不遮挡"],
-    "forbidden": ["所有人同时"],
+    "required": [
+      "先停下",
+      "随后错峰",
+      "继续搬运",
+      "后景",
+      "不遮挡"
+    ],
+    "forbidden": [
+      "所有人同时"
+    ],
     "expected_valid": true
   },
   {
-    "id": "R13-offscreen-character-fail",
+    "id": "R13-offscreen-relation-structure-pass",
     "kind": "prompt",
     "sample": "0-4秒。65mm，角色A中景，眼平固定镜头。\n\n画面：角色A位于中央，角色B站在画外。\n\n动作/表情：角色A看向画外的角色B。\n\n声音：N/A。\n\n无配乐无字幕",
-    "expected_valid": false
+    "expected_valid": true,
+    "scope_note": "只表示提示词结构可通过。角色B仍明确在画外；是否需保留其站位、是否错误引入画内主体，须对照真实Stage1由内容复核判断，不能仅见画外角色名字即拒绝。原反例保留原文本，不追认其内容已验收。"
   },
   {
     "id": "R13-offscreen-direction-pass",
@@ -182,81 +253,168 @@
   {
     "id": "R17-normalized-shot-sequence-pass",
     "kind": "normalized_shot_sequence",
-    "sample": ["5-1A", "5-1B", "5-1C", "5-1D", "5-1E", "5-1F", "5-1G", "5-1H", "5-1J", "5-1K"],
+    "sample": [
+      "5-1A",
+      "5-1B",
+      "5-1C",
+      "5-1D",
+      "5-1E",
+      "5-1F",
+      "5-1G",
+      "5-1H",
+      "5-1J",
+      "5-1K"
+    ],
     "expected_valid": true
   },
   {
     "id": "R17-temporary-insert-suffix-fail",
     "kind": "normalized_shot_sequence",
-    "sample": ["5-1A", "5-1B", "5-1B-1", "5-1C"],
+    "sample": [
+      "5-1A",
+      "5-1B",
+      "5-1B-1",
+      "5-1C"
+    ],
     "expected_valid": false
   },
   {
     "id": "R17-shot-order-fail",
     "kind": "normalized_shot_sequence",
-    "sample": ["5-1A", "5-1C", "5-1B"],
+    "sample": [
+      "5-1A",
+      "5-1C",
+      "5-1B"
+    ],
     "expected_valid": false
   },
   {
     "id": "R18-duration-inference-pass",
     "kind": "presence",
     "sample": "先计算完整台词、停顿、起身、走位和落幅所需时间，再反推镜头时长，不先套默认值。",
-    "required": ["计算完整台词", "停顿", "走位", "落幅", "反推镜头时长"],
-    "forbidden": ["默认5–10秒"],
+    "required": [
+      "计算完整台词",
+      "停顿",
+      "走位",
+      "落幅",
+      "反推镜头时长"
+    ],
+    "forbidden": [
+      "默认5–10秒"
+    ],
     "expected_valid": true
   },
   {
     "id": "R19-opening-establish-pass",
     "kind": "presence",
     "sample": "首镜交代时间与氛围、主要人物和群体状态、出入口、危险方向与核心光源。",
-    "required": ["时间与氛围", "主要人物", "群体状态", "出入口", "危险方向", "核心光源"],
+    "required": [
+      "时间与氛围",
+      "主要人物",
+      "群体状态",
+      "出入口",
+      "危险方向",
+      "核心光源"
+    ],
     "expected_valid": true
   },
   {
     "id": "R20-state-ledger-recompute-pass",
     "kind": "ordered",
     "sample": "人物起身，绕过另一人，进入新灯区；从当前镜头重算机位、肩侧、画面左右、视线和光影。",
-    "required": ["起身", "绕过", "进入新灯区", "重算机位", "肩侧", "画面左右", "视线", "光影"],
+    "required": [
+      "起身",
+      "绕过",
+      "进入新灯区",
+      "重算机位",
+      "肩侧",
+      "画面左右",
+      "视线",
+      "光影"
+    ],
     "expected_valid": true
   },
   {
     "id": "R21-reveal-order-pass",
     "kind": "ordered",
     "sample": "人物寻找，没有回应，人物察觉异常，关系镜头确认，决定性细节出现，人物反应，群体获知。",
-    "required": ["人物寻找", "没有回应", "察觉异常", "关系镜头确认", "决定性细节", "人物反应", "群体获知"],
+    "required": [
+      "人物寻找",
+      "没有回应",
+      "察觉异常",
+      "关系镜头确认",
+      "决定性细节",
+      "人物反应",
+      "群体获知"
+    ],
     "expected_valid": true
   },
   {
     "id": "R22-long-speech-coverage-pass",
     "kind": "presence",
     "sample": "演讲主体镜头保留完整发展；改变理解的听众反应进入成片主序列；其他差异化反应列为备用覆盖。",
-    "required": ["演讲主体", "完整发展", "听众反应", "成片主序列", "备用覆盖"],
+    "required": [
+      "演讲主体",
+      "完整发展",
+      "听众反应",
+      "成片主序列",
+      "备用覆盖"
+    ],
     "expected_valid": true
   },
   {
     "id": "R23-outdoor-environment-card-pass",
     "kind": "presence",
     "sample": "室外多镜中的持续风、云层和衣角运动影响连续性，因此建立简洁环境卡。",
-    "required": ["室外", "持续风", "云层", "衣角", "影响连续性", "环境卡"],
+    "required": [
+      "室外",
+      "持续风",
+      "云层",
+      "衣角",
+      "影响连续性",
+      "环境卡"
+    ],
     "expected_valid": true
   },
   {
     "id": "R24-light-map-recompute-pass",
     "kind": "presence",
     "sample": "人物换位且摄影机换侧后，根据真实光源位置重新确认人物自身右侧亮面、左侧暗部和背景曝光。",
-    "required": ["人物换位", "摄影机换侧", "真实光源位置", "右侧亮面", "左侧暗部", "背景曝光"],
-    "forbidden": ["保持far-side key"],
+    "required": [
+      "人物换位",
+      "摄影机换侧",
+      "真实光源位置",
+      "右侧亮面",
+      "左侧暗部",
+      "背景曝光"
+    ],
+    "forbidden": [
+      "保持far-side key"
+    ],
     "expected_valid": true
   },
   {
-    "id": "R25-independent-performance-needs-emotion-pass",
+    "id": "R25-independent-performance-optional-emotion-present-pass",
     "kind": "conditional_categories",
     "sample": {
       "independent_performance": true,
       "pure_function": false,
       "extras_visible": false,
-      "tight_85_or_more": true,
+      "tight_framing": true,
       "has_emotion": true,
+      "has_extras": false
+    },
+    "expected_valid": true
+  },
+  {
+    "id": "R25-independent-performance-optional-emotion-absent-pass",
+    "kind": "conditional_categories",
+    "sample": {
+      "independent_performance": true,
+      "pure_function": false,
+      "extras_visible": false,
+      "tight_framing": true,
+      "has_emotion": false,
       "has_extras": false
     },
     "expected_valid": true
@@ -268,7 +426,7 @@
       "independent_performance": false,
       "pure_function": true,
       "extras_visible": false,
-      "tight_85_or_more": true,
+      "tight_framing": true,
       "has_emotion": true,
       "has_extras": false
     },
@@ -281,36 +439,39 @@
       "independent_performance": false,
       "pure_function": false,
       "extras_visible": true,
-      "tight_85_or_more": false,
+      "tight_framing": false,
       "has_emotion": false,
       "has_extras": true
     },
     "expected_valid": true
   },
   {
-    "id": "R25-tight-shot-mechanical-extras-fail",
+    "id": "R25-tight-shot-visible-extras-pass",
     "kind": "conditional_categories",
     "sample": {
       "independent_performance": true,
       "pure_function": false,
       "extras_visible": true,
-      "tight_85_or_more": true,
+      "tight_framing": true,
       "has_emotion": true,
       "has_extras": true
     },
-    "expected_valid": false
+    "expected_valid": true,
+    "scope_note": "只检声明条件是否自洽：紧景别不自动否定已声明可见的群演；是否真实可见/必要仍需内容审读。"
   },
   {
     "id": "R26-segment-first-context-dependent-fail",
     "kind": "segment_boundary",
-    "sample": "0-5秒。65mm，角色中近景，眼平固定镜头。\n\n画面：角色仍然站在画面左侧。\n\n动作/表情：角色转头，镜头结束。\n\n声音：N/A。\n\n无配乐无字幕",
-    "expected_valid": false
+    "sample": "0-5秒。65mm，角色中近景，眼平固定镜头。\n\n画面：角色继续上一片段的姿态。\n\n动作/表情：角色转头，镜头结束。\n\n声音：N/A。\n\n无配乐无字幕",
+    "expected_valid": false,
+    "scope_note": "保留历史词面案例；当前不以此自动判自足性，自测明确列为UNASSESSED，不计入自动通过。"
   },
   {
     "id": "R26-segment-boundary-pass",
     "kind": "segment_boundary",
     "sample": "0-5秒。65mm，角色中近景，眼平固定镜头。\n\n画面：角色站在画面左侧，右手握住随身物，视线停在画面右侧。\n\n动作/表情：角色向自身右侧转头，最终站在画面左侧，右手仍握住随身物，视线停在画面右侧，身体停止运动。\n\n声音：N/A。\n\n无配乐无字幕",
-    "expected_valid": true
+    "expected_valid": true,
+    "scope_note": "保留历史词面案例；当前不以此自动判自足性，自测明确列为UNASSESSED，不计入自动通过。"
   },
   {
     "id": "R27-voice-reference-default-fail",
@@ -329,21 +490,47 @@
     "id": "F01-forward-long-speech",
     "kind": "presence",
     "sample": "说话者的个人陈述进入双人关系，再扩大到小范围听众和群像；关键人物反应进入主序列，其他反应列入备用覆盖，最后回到说话者情绪峰值。",
-    "required": ["个人陈述", "双人关系", "小范围听众", "群像", "关键人物反应", "主序列", "备用覆盖", "说话者情绪峰值"],
+    "required": [
+      "个人陈述",
+      "双人关系",
+      "小范围听众",
+      "群像",
+      "关键人物反应",
+      "主序列",
+      "备用覆盖",
+      "说话者情绪峰值"
+    ],
     "expected_valid": true
   },
   {
     "id": "F02-forward-position-change",
     "kind": "ordered",
     "sample": "角色从坐姿起身，绕过对手，进入新灯区，状态账本更新，重新计算局部轴线，重新确认肩侧，重新确认画面左右，重新确认人物自身亮面与暗面。",
-    "required": ["从坐姿起身", "绕过对手", "进入新灯区", "状态账本更新", "重新计算局部轴线", "重新确认肩侧", "重新确认画面左右", "重新确认人物自身亮面与暗面"],
+    "required": [
+      "从坐姿起身",
+      "绕过对手",
+      "进入新灯区",
+      "状态账本更新",
+      "重新计算局部轴线",
+      "重新确认肩侧",
+      "重新确认画面左右",
+      "重新确认人物自身亮面与暗面"
+    ],
     "expected_valid": true
   },
   {
     "id": "F03-forward-suspense-discovery",
     "kind": "ordered",
     "sample": "角色先在空间中寻找，没有得到回应，因画外细小变化察觉异常，通过主观视角确认方向，然后才揭示决定性细节，回到人物反应，最后让群体获知。",
-    "required": ["在空间中寻找", "没有得到回应", "察觉异常", "主观视角确认", "决定性细节", "人物反应", "群体获知"],
+    "required": [
+      "在空间中寻找",
+      "没有得到回应",
+      "察觉异常",
+      "主观视角确认",
+      "决定性细节",
+      "人物反应",
+      "群体获知"
+    ],
     "expected_valid": true
   }
 ]

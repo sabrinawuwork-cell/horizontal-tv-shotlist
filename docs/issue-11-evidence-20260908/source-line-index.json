@@ -1,0 +1,93 @@
+{
+  "references/project-input-schema.md": {
+    "## 缺失信息处理": [
+      29
+    ],
+    "## 场次级输入": [
+      17
+    ]
+  },
+  "references/director-core.md": {
+    "## 2.": [
+      11
+    ],
+    "方案必须": [
+      15
+    ]
+  },
+  "references/v2-stage2-fixed-prompts.md": {
+    "## 六": [
+      43
+    ],
+    "## 十一": [
+      73
+    ]
+  },
+  "references/v2-stage3-authorized-additions.md": {
+    "## 2.": [
+      26
+    ],
+    "## 7.": [
+      107
+    ]
+  },
+  "references/v2-model-seedance-2.5.md": {
+    "## 情感": [
+      17
+    ],
+    "1–8": [
+      43
+    ]
+  },
+  "references/v2-seedance-prompt-rules-master.md": {
+    "其他章节只负责": [
+      9
+    ],
+    "不要写无法": [
+      50
+    ]
+  },
+  "references/output-schema.md": {
+    "无关镜号": [
+      32
+    ],
+    "## Excel": [
+      84
+    ]
+  },
+  "scripts/v2_delivery_checks.py": {
+    "if segment not in": [
+      234
+    ]
+  },
+  "scripts/validate_v2_shotlist.py": {
+    "source = source_file": [
+      24,
+      39
+    ],
+    "manifest = source_file": [
+      68
+    ]
+  },
+  "scripts/build_stage3_xlsx.mjs": {
+    "const workbook = Workbook.create": [
+      86
+    ]
+  },
+  "evals/run-protocol.md": {
+    "## Stage 1": [
+      9
+    ],
+    "## Stage 2": [
+      15
+    ],
+    "## Stage 3": [
+      21
+    ]
+  },
+  "evals/rubric.md": {
+    "## 硬失败": [
+      5
+    ]
+  }
+}

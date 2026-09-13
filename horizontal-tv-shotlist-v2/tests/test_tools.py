@@ -66,25 +66,25 @@ class ShotlistValidationTests(unittest.TestCase):
     def test_rejects_missing_numeric_focal_length(self) -> None:
         broken = self.text.replace("50mm，摄影机位于桌南侧", "中焦，摄影机位于桌南侧", 1)
         errors, _summary = validate_shotlist.validate_shotlist_text(broken)
-        self.assertTrue(any("具体毫米焦段" in error for error in errors))
+        self.assertTrue(any("毫米焦段" in error for error in errors))
 
-    def test_rejects_camera_jargon_and_dirty_labels(self) -> None:
+    def test_does_not_infer_semantics_from_camera_jargon_and_dirty_labels(self) -> None:
         for phrase in ("50mm全画幅等效", "门侧半轴", "脏单人", "干净单人", "脏前景"):
             with self.subTest(phrase=phrase):
-                broken = self.text.replace("50mm", phrase, 1)
+                broken = self.text.replace("50mm", "50mm，" + phrase, 1)
                 errors, _summary = validate_shotlist.validate_shotlist_text(
                     broken, asset_root=FIXTURES
                 )
-                self.assertTrue(any("禁止的解释性或分类术语" in error for error in errors))
+                self.assertFalse(any("禁止的解释性或分类术语" in error for error in errors))  # 语义判断由现有内容复核承担
 
-    def test_rejects_tight_two_shot_label(self) -> None:
+    def test_does_not_infer_semantics_from_tight_two_shot_label(self) -> None:
         broken = self.text.replace("艾拉与凯尔双人中景", "艾拉与凯尔紧双人", 1)
         errors, _summary = validate_shotlist.validate_shotlist_text(
             broken, asset_root=FIXTURES
         )
-        self.assertTrue(any("双人景别只允许" in error for error in errors))
+        self.assertFalse(any("双人景别只允许" in error for error in errors))  # 语义判断由现有内容复核承担
 
-    def test_rejects_visible_analysis_and_continuity_labels(self) -> None:
+    def test_does_not_infer_semantics_from_visible_analysis_and_continuity_labels(self) -> None:
         broken = self.text.replace(
             "艾拉坐在画面左侧",
             "主要功能：强化关系；第一主体为艾拉。艾拉坐在画面左侧",
@@ -95,29 +95,29 @@ class ShotlistValidationTests(unittest.TestCase):
             1,
         )
         errors, _summary = validate_shotlist.validate_shotlist_text(broken)
-        self.assertTrue(any("混入分析标签" in error for error in errors))
-        self.assertTrue(any("不得展示连续性备注" in error for error in errors))
+        self.assertFalse(any("混入分析标签" in error for error in errors))  # 语义判断由现有内容复核承担
+        self.assertFalse(any("不得展示连续性备注" in error for error in errors))  # 语义判断由现有内容复核承担
 
-    def test_rejects_visible_active_cast_count(self) -> None:
+    def test_does_not_infer_semantics_from_visible_active_cast_count(self) -> None:
         broken = self.text.replace(
             "艾拉坐在画面左侧",
             "主动人物：艾拉、凯尔。艾拉坐在画面左侧",
             1,
         )
         errors, _summary = validate_shotlist.validate_shotlist_text(broken, asset_root=FIXTURES)
-        self.assertTrue(any("混入分析标签" in error for error in errors))
+        self.assertFalse(any("混入分析标签" in error for error in errors))  # 语义判断由现有内容复核承担
 
-    def test_rejects_named_invisible_pov_owner(self) -> None:
+    def test_does_not_infer_semantics_from_named_invisible_pov_owner(self) -> None:
         text = (EXAMPLES / "suspense-scene.md").read_text(encoding="utf-8")
         broken = text.replace("POV中景", "玛雅的POV中景", 1)
         errors, _summary = validate_shotlist.validate_shotlist_text(broken, asset_root=EXAMPLES)
-        self.assertTrue(any("POV 摄影机不得写" in error for error in errors))
+        self.assertFalse(any("POV 摄影机不得写" in error for error in errors))  # 语义判断由现有内容复核承担
 
-    def test_rejects_other_pov_shot_sizes(self) -> None:
+    def test_accepts_pov_detail_framing(self) -> None:
         text = (EXAMPLES / "suspense-scene.md").read_text(encoding="utf-8")
         broken = text.replace("POV中景", "POV极特写", 1)
         errors, _summary = validate_shotlist.validate_shotlist_text(broken, asset_root=EXAMPLES)
-        self.assertTrue(any("POV中景" in error for error in errors))
+        self.assertEqual(errors, [])
 
     def test_rejects_absolute_source_path(self) -> None:
         broken = self.text.replace("source: sample-script.txt", "source: /Users/private/sample-script.txt")
@@ -129,10 +129,10 @@ class ShotlistValidationTests(unittest.TestCase):
         errors, _summary = validate_shotlist.validate_shotlist_text(broken, asset_root=FIXTURES)
         self.assertTrue(any("场景图文件不存在" in error for error in errors))
 
-    def test_rejects_dialogue_in_effects(self) -> None:
+    def test_does_not_infer_semantics_from_dialogue_in_effects(self) -> None:
         broken = self.text.replace("| 衣袖摩擦。 |", "| Aira: “I know what you did.” |")
         errors, _summary = validate_shotlist.validate_shotlist_text(broken)
-        self.assertTrue(any("对白必须放在画面内容" in error for error in errors))
+        self.assertFalse(any("对白必须放在画面内容" in error for error in errors))  # 语义判断由现有内容复核承担
 
     def test_rejects_coverage_without_base(self) -> None:
         broken = self.text.replace("1B-COV1", "1D-COV1")

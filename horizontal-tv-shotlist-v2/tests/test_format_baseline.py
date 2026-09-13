@@ -20,7 +20,7 @@ class StandaloneFormatBaselineTests(unittest.TestCase):
             command = [sys.executable, str(package / "scripts/validate_v1_compatibility.py")]
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("35 inherited format files", result.stdout)
+            self.assertIn("35 baseline files verified", result.stdout)
 
             schema = package / "references/output-schema.md"
             original = schema.read_bytes()

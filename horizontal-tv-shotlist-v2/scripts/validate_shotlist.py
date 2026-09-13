@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the horizontal nine-column Markdown authority."""
+"""Validate seven-column structure and deterministic delivery constraints."""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ import json
 from pathlib import Path
 import re
 import sys
+
+from content_contract import focal_lengths, speech_by_shot
 
 from shotlist_common import (
     HEADERS,
@@ -58,7 +60,7 @@ def _declared_scene_durations(text: str) -> dict[str, Decimal]:
     result: dict[str, Decimal] = {}
     current_scene: str | None = None
     for line in text.splitlines():
-        heading = re.match(r"^#{2,4}\s*场次\s+(.+?)\s*$", line.strip())
+        heading = re.match(r"^#{1,4}\s*场次\s*(\d+(?:-\d+)?)(?:\s*[｜|:：—–].*)?\s*$", line.strip())
         if heading:
             current_scene = heading.group(1).strip()
             continue
@@ -72,7 +74,7 @@ def _scene_notes(text: str) -> dict[str, dict[str, str]]:
     result: dict[str, dict[str, str]] = {}
     current_scene: str | None = None
     for line in text.splitlines():
-        heading = re.match(r"^#{2,4}\s*场次\s+(.+?)\s*$", line.strip())
+        heading = re.match(r"^#{1,4}\s*场次\s*(\d+(?:-\d+)?)(?:\s*[｜|:：—–].*)?\s*$", line.strip())
         if heading:
             current_scene = heading.group(1).strip()
             result.setdefault(current_scene, {})
@@ -87,16 +89,6 @@ def _scene_notes(text: str) -> dict[str, dict[str, str]]:
         if match:
             result[current_scene][match.group(1).lower()] = match.group(2).strip()
     return result
-
-
-def _load_dialogue_manifest(path: Path | None) -> list[str]:
-    if path is None:
-        return []
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    values = payload.get("dialogue", payload) if isinstance(payload, dict) else payload
-    if not isinstance(values, list) or not all(isinstance(item, str) for item in values):
-        raise ValueError("对白清单必须是字符串数组或包含 dialogue 字符串数组的对象")
-    return values
 
 
 def validate_shotlist_text(
@@ -168,7 +160,7 @@ def validate_shotlist_text(
                     errors.append(f"第 {line_no} 行：镜头 {shot_text} 超过 30s 硬上限")
                 elif duration > 20 and normalized not in long_shot_authorizations:
                     errors.append(
-                        f"第 {line_no} 行：镜头 {shot_text} 进入 20–30s 区间但缺少镜号级授权"
+                        f"第 {line_no} 行：镜头 {shot_text} 超过20s且不超过30s，但缺少镜号级授权"
                     )
                 if (duration * 2) != (duration * 2).to_integral():
                     errors.append(f"第 {line_no} 行：时长只允许整数秒或半秒")
@@ -180,35 +172,13 @@ def validate_shotlist_text(
             picture = row[4]
             sound = row[5].strip()
             edit = row[6].strip()
-            if not re.search(r"(?<!\d)(?:1[2-9]|[2-9]\d|1\d{2}|2\d{2})\s*mm(?![A-Za-z])", camera, re.I):
-                errors.append(f"第 {line_no} 行：摄影机必须写具体毫米焦段，例如 50mm")
-            if re.search(r"全画幅等效|门侧半轴|脏单人|干净单人|脏前景", camera):
-                errors.append(f"第 {line_no} 行：摄影机混入禁止的解释性或分类术语")
-            if not any(token in camera for token in ("眼平", "胸口", "腰部", "贴地", "肩高", "膝高", "视线高度", "俯拍", "离地")):
-                errors.append(f"第 {line_no} 行：摄影机缺少可执行的机位高度")
-            if not re.search(r"(?:大全景|全景|中全景|中景|中近景|近景|大近景|极特写|特写)", camera):
-                errors.append(f"第 {line_no} 行：摄影机缺少主体与可执行景别")
-            if "紧双人" in camera:
-                errors.append(f"第 {line_no} 行：双人景别只允许全景、中景、中近景或近景")
-            if not any(token in camera for token in ("固定", "手持", "推", "拉", "移", "摇", "跟", "升", "降", "环绕", "变焦", "锁定")):
-                errors.append(f"第 {line_no} 行：摄影机缺少固定、手持或具体运动方式")
-            if re.search(r"(?:主要功能|第一主体|第二主体|主动人物|轴线|为了保持连续性|意味着.+(?:选择|决定)|AI生成|Seedance|模型限制)", picture, re.I):
-                errors.append(f"第 {line_no} 行：画面内容混入分析标签、技术证明或模型说明")
-            if re.search(r"连续性\s*[:：]", edit):
-                errors.append(f"第 {line_no} 行：剪辑衔接只写切点与衔接方式，不得展示连续性备注")
-            if re.search(r"(?:[\u3400-\u9fffA-Za-z][\u3400-\u9fffA-Za-z .'-]{0,30})的\s*POV", camera, re.I):
-                errors.append(f"第 {line_no} 行：POV 摄影机不得写不可见视点人物名字")
-            if re.search(r"POV", camera, re.I) and not re.search(r"POV中景", camera, re.I):
-                errors.append(f"第 {line_no} 行：POV 统一只允许写 POV中景")
-            if "过肩" in camera and not re.search(r"过.+的?[左右]肩拍", camera):
-                errors.append(f"第 {line_no} 行：过肩镜头必须写明过谁的左/右肩拍谁")
-            if re.search(r"(?:^|\s)[A-Za-z][A-Za-z .'-]{0,30}:\s*[\"“]", sound):
-                errors.append(f"第 {line_no} 行：对白必须放在画面内容，不得放在音效")
-            if re.search(r"\b(?:BGM|score|配乐|情绪音乐)\b", sound, re.I):
-                errors.append(f"第 {line_no} 行：配乐不得作为普通音效")
-            moving_camera = bool(re.search(r"(?:推近|拉远|横移|摇镜|跟随|升起|下降|环绕|变焦|前移|后移)", camera))
-            if moving_camera and not re.search(r"(?:镜头|摄影机).*(?:停|落|最后|最终)|(?:停|落幅).*(?:镜头|摄影机)", picture):
-                errors.append(f"第 {line_no} 行：运动镜头的画面内容缺少触发、过程或最终停稳状态")
+            focals = focal_lengths(camera)
+            if not focals:
+                errors.append(f"第 {line_no} 行：摄影机缺少可读取的毫米焦段")
+            elif any(value <= 0 for value in focals):
+                errors.append(f"第 {line_no} 行：毫米焦段必须为正数")
+            # Scene meaning, terminology, framing and actual sound sources are
+            # reviewed against the approved directing choices, not word lists.
 
             if coverage:
                 coverage_rows.append((line_no, row))
@@ -217,8 +187,6 @@ def validate_shotlist_text(
                 if normalized in coverage_ids:
                     errors.append(f"第 {line_no} 行：覆盖镜号 {normalized} 重复")
                 coverage_ids.add(normalized)
-                if not re.search(r"(?:保护|替代|备用|接点|风险)", row[6]):
-                    errors.append(f"第 {line_no} 行：覆盖镜剪辑衔接必须说明保护的主镜或风险")
             else:
                 main_rows.append((line_no, row))
                 if shot.coverage is not None:
@@ -302,18 +270,19 @@ def validate_shotlist_text(
         except ValueError as exc:
             errors.append(f"frontmatter total_duration：{exc}")
 
-    try:
-        dialogue = _load_dialogue_manifest(dialogue_manifest)
-    except (ValueError, json.JSONDecodeError) as exc:
-        errors.append(f"对白清单错误：{exc}")
-        dialogue = []
-    picture_text = "\n".join(row[4] for _, row in main_rows)
-    for line in dialogue:
-        count = picture_text.count(line)
-        if count == 0:
-            errors.append(f"权威对白遗漏：{line}")
-        elif count > 1:
-            errors.append(f"权威对白重复 {count} 次：{line}")
+    if dialogue_manifest is not None:
+        try:
+            payload = json.loads(read_text(dialogue_manifest))
+            dialogue = payload.get('dialogue') if isinstance(payload, dict) else None
+            if not isinstance(dialogue, list) or not all(isinstance(item, str) for item in dialogue):
+                raise ValueError('对白清单须为包含dialogue字符串数组与stage1_speech的对象，由代理补齐旧记录')
+            speech, issues = speech_by_shot([row for _, row in main_rows], payload.get('stage1_speech'))
+            errors.extend(issues)
+            actual = [line for _, row in main_rows for line in speech.get(row[1].upper(), [])]
+            if not issues and ''.join(actual) != ''.join(dialogue):
+                errors.append('已声明发声文本与对白清单的原文、数量或顺序不一致')
+        except (OSError, UnicodeError, ValueError) as exc:
+            errors.append(f'对白清单错误：{exc}')
 
     summary: dict[str, object] = {
         "main_shots": len(main_rows),

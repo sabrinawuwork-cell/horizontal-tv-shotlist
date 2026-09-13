@@ -1,5 +1,12 @@
 {
   "dialogue": [
     "I know what you did."
-  ]
+  ],
+  "stage1_speech": {
+    "1A": [],
+    "1B": [
+      "I know what you did."
+    ],
+    "1C": []
+  }
 }

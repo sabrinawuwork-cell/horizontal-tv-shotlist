@@ -1,0 +1,50 @@
+{
+  "scope": "read-only source recovery for Issue #11 historical cases",
+  "docx": {
+    "sha256": "03a649f407a764bd11d11cdfbb40cd0aae39685d1ad99ab5e0624b3aab139420",
+    "episodes": 15,
+    "tracked_insertions": 92,
+    "tracked_deletions": 0,
+    "filename": "《赤途医心》新版1-15集2.1 定稿(1).docx",
+    "exact_local_path_record": "metadata.json in raw_readback_location"
+  },
+  "live_ep11": {
+    "id": "CYArdiCJmoC124xNmuBcbQvhncg",
+    "revision": 12,
+    "chars": 11662,
+    "same_docx_body_ignoring_whitespace": false,
+    "大厅_positions": [
+      5951
+    ]
+  },
+  "comparison": {
+    "method": "extract visible XML text including insertions, start at episode header, remove whitespace only",
+    "differences": [
+      {
+        "type": "insert",
+        "docx": "悄然对视，萧楚澄默默摇摇头示意沈秋瞳保持冷静。师爷前一步，为难地向二当家拱手作揖。师爷：二当家！大当",
+        "feishu": "悄然对视，萧楚澄默默摇摇头示意沈秋瞳保持冷静。师爷上前一步，为难地向二当家拱手作揖。师爷：二当家！大当"
+      }
+    ],
+    "exact_same_body": false,
+    "source_authority_confirmed_for_original_issue_run": false
+  },
+  "remaining": [
+    "original failing Stage1/2/3 files and version",
+    "actual scene and character references used in those files"
+  ],
+  "raw_readback_location": "/var/folders/t6/3rgg2srs1v3glcbzs4kf2blw0000gn/T/issue11-build-7h2fcs9q/source-recovery",
+  "source_files_modified": false,
+  "remote_writes": false,
+  "generation_submissions": 0,
+  "partial_fetch_observation": {
+    "revision": 12,
+    "same_revision_as_full": true,
+    "section_anchor": "doxcnU5gK14GYTzgwntBb4rByge",
+    "section_visible_characters": 101,
+    "section_has_dialogue": false,
+    "full_has_dialogue": true,
+    "result": "嵌套标题的section读取仅返回标题和三条开场动作；完整读取包含后续对白和抢枪结尾",
+    "handling": "用完整读取核对实际场次边界；成功响应和摘要不作为已读完整的证明"
+  }
+}

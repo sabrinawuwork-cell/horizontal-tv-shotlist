@@ -1,0 +1,31 @@
+{
+  "run-a": {
+    "shots": 15,
+    "seconds": 86,
+    "tasks": [
+      27,
+      12,
+      27,
+      20
+    ],
+    "speech_strings_exactly_once": 7,
+    "workbooks_all_main_cells_match": true,
+    "task_request_body_consistent": true,
+    "stage3_sha_current": true
+  },
+  "run-b": {
+    "shots": 11,
+    "seconds": 82,
+    "tasks": [
+      26,
+      17,
+      24,
+      15
+    ],
+    "speech_strings_exactly_once": 7,
+    "workbooks_all_main_cells_match": true,
+    "task_request_body_consistent": true,
+    "stage3_sha_current": true
+  },
+  "frozen_sources_and_outputs_unchanged": true
+}

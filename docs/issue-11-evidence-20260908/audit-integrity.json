@@ -1,0 +1,11 @@
+{
+  "issue_body_chars": 9049,
+  "issue_body_sha256": "bc2bf9dd02c97b87d800f90bd36624d6d5c557ef85fbe35f9589692bebc70798",
+  "issue_items": 16,
+  "original_causes": 6,
+  "original_steps": 13,
+  "checklist_items": 52,
+  "all_local_links_exist": true,
+  "skill_files_unchanged_from_frozen_candidate": true,
+  "scope": "diagnosis only; no source skill, production sample or GitHub issue mutation"
+}

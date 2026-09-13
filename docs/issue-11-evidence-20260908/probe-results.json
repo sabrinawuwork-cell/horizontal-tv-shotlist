@@ -1,0 +1,59 @@
+{
+  "scope": "Read-only audit. Mutated copies are deliberately incorrect probes, never candidate improvements or production outputs.",
+  "baseline": [],
+  "wrong_speaker": {
+    "change": [
+      "林序看着站定的陶然，问：“你打开过？”",
+      "陶然看着站定的林序，问：“你打开过？”"
+    ],
+    "validation_errors": []
+  },
+  "wrong_action_result": {
+    "change": [
+      "向北将抽屉推回",
+      "向南把抽屉重新拉开"
+    ],
+    "validation_errors": []
+  },
+  "noncontiguous_generation_task_reuse": {
+    "input_segments": [
+      "片段1",
+      "片段2",
+      "片段1"
+    ],
+    "errors": [
+      "镜头1C：片段编号必须从1连续递进，不得倒退或跳号"
+    ]
+  },
+  "descriptive_lighting_without_numeric_lux": {
+    "input": "光影：主光来自北侧高窗漫射天光，人物自身左侧柔和明亮，右侧保留自然暗部。",
+    "errors": [
+      "光影缺少色温K",
+      "光影缺少人物亮面或暗面lux；背景按当前取景另行判断"
+    ]
+  },
+  "local_deletion_preserving_other_shot_ids": {
+    "shots": [
+      "1A",
+      "1C"
+    ],
+    "errors": [
+      "场次 1 主序列镜号未按行序从A连续递进并跳过I/O"
+    ]
+  },
+  "project_term_has_builtin_check": {
+    "医护": false,
+    "note": "This only establishes absence from the built-in list; no project extra-term loader was found in the current validator. Manual handling remains possible."
+  },
+  "changed_scene_fact_file": {
+    "change": "scene-facts 中桌高从0.75米改为1.4米",
+    "declared_scene_facts_sha256": "052b8f3f6df7fdcd7f56052b8439bac5831579319b1ff36aa7850abd585ea29d",
+    "actual_scene_facts_sha256": "b26b265e4435576c9a65a622411f3bc35aa90dcf1139c1ba1520a69f71709eb3",
+    "errors": []
+  },
+  "approved_stage3_with_red_blocker": {
+    "baseline_errors": [],
+    "change": "为approved Stage 3增加备注列，首行明确记录红色未解决执行阻塞",
+    "errors": []
+  }
+}
