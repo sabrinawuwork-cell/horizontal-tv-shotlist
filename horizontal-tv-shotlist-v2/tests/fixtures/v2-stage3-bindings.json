@@ -1,0 +1,13 @@
+{
+  "source_stage1_sha256": "2c5e424530cdd4f70dab137116f5e25a9562606841b10146da7b11ab96177f5f",
+  "shots": {
+    "1A": {
+      "fixed_cards": [
+        "光影·角色A"
+      ],
+      "speech": [
+        "保留原文句A。"
+      ]
+    }
+  }
+}

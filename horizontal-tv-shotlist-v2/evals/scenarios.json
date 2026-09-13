@@ -2,7 +2,7 @@
   {"id":"quiet-two-person-dialogue","stage":"shotlist","focus":"安静双人对话中的听者、停顿与关系画面","hard_checks":["原文对白完整","不按说话人轮切","横向距离参与叙事"]},
   {"id":"power-reversal","stage":"shotlist","focus":"权力翻转前后的机位、调度与视觉所有权","hard_checks":["反转不提前","细节后回到改变后的关系"]},
   {"id":"four-person-confrontation","stage":"shotlist","focus":"四名主动人物的局部轴线、层次与观看中心","hard_checks":["不超过四名主动人物","只有一个主要动作中心"]},
-  {"id":"intimacy-and-boundary","stage":"shotlist","focus":"亲密距离、同意关系、接触与接收反应","hard_checks":["不新增亲密程度","身体局部有主人","每个关键关系Beat有独立可读的单人、过肩反应、近景/大近景或功能特写","共享双人镜头不替代关键反应"]},
+  {"id":"intimacy-and-boundary","stage":"shotlist","focus":"亲密距离、同意关系、接触与接收反应","hard_checks":["不新增亲密程度","身体局部有主人","关键关系变化与接收反应可读，镜型按实际观看需要选择","共享构图可清楚呈现反应时不强制拆为独立镜头"]},
   {"id":"suspense-reveal","stage":"shotlist","focus":"空间建立、信息所有权与揭示时点","hard_checks":["揭示改变后续行动","不靠装饰空镜"]},
   {"id":"confined-space","stage":"shotlist","focus":"车厢、走廊或小房间中的可行路径与遮挡","hard_checks":["无穿越障碍","机位物理成立"]},
   {"id":"contained-action","stage":"shotlist","focus":"意图、接触、结果与余震的最短可读动作链","hard_checks":["攻击者目标明确","不法医式拆动作"]},

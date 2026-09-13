@@ -6,8 +6,8 @@ version: v001
 status: approved
 source_stage1: v2-stage1-dialogue-approved.md
 scene: "1"
-scene_image: assets/anonymous-scene.png
-stage1_sha256: anonymous-digest
+scene_image: assets/office-scene.svg
+stage1_sha256: 2c5e424530cdd4f70dab137116f5e25a9562606841b10146da7b11ab96177f5f
 speaking_characters: 角色A
 voice_prompt_required: no
 environment_required: no

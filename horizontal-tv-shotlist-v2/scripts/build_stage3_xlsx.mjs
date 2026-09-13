@@ -79,6 +79,9 @@ async function main() {
   const args = argsOf(process.argv.slice(2));
   const text = await fs.readFile(args.input, "utf8");
   const meta = frontmatter(text);
+  const statusLabel = meta.validation_scope === "offline-evaluation"
+    ? `${meta.status || "draft"}（离线模拟阶段批准；未生产批准）`
+    : meta.status || "draft";
   const parsed = parse(text);
   const { headers, rows } = parsed;
   const hasNotes = headers.length === 6;
@@ -91,11 +94,11 @@ async function main() {
 
   info.getRange(`A1:${endColumn}1`).merge();
   info.getRange("A1").values = [[`${meta.project || "项目"} ${meta.episode || ""}｜Stage 3 Seedance提示词`]];
-  info.getRange(`A1:${endColumn}1`).format = { fill: "#162B3A", font: { name: "Aptos Display", size: 18, bold: true, color: "#FFFFFF" }, verticalAlignment: "center" };
+  info.getRange(`A1:${endColumn}1`).format = { fill: "#162B3A", font: { name: "Arial", size: 18, bold: true, color: "#FFFFFF" }, verticalAlignment: "center" };
   info.getRange(`A1:${endColumn}1`).format.rowHeight = 36;
   const uniqueSegments = [...new Set(rows.map((row) => row[1]))];
   info.getRange("A3:B9").values = [
-    ["项目", meta.project || ""], ["集号", meta.episode || ""], ["版本 / 状态", `${meta.version || ""} / ${meta.status || ""}`],
+    ["项目", meta.project || ""], ["集号", meta.episode || ""], ["版本 / 状态", `${meta.version || ""} / ${statusLabel}`],
     ["模型", meta.model || "seedance-2.5"], ["镜头数", rows.length], ["片段数", uniqueSegments.length], ["总时长", null],
   ];
   info.getRange("A3:A9").format = { fill: "#DCE8EE", font: { bold: true, color: "#203744" } };
@@ -108,7 +111,7 @@ async function main() {
   info.getRange(`A12:${endColumn}15`).values = [
     ["片段按强制边界、单镜不可拆、30秒硬上限、主体稳定性、动作完整性、27–30秒目标依次决策。"],
     ["每个片段从0秒累计；分镜内容和提示词的类别之间均保留一个空行。"],
-    ["draft显示固定类别名称；approved只能由Stage 2批准文本机械展开。"],
+    ["Stage 3忠实转译已批准分镜；适用的固定类别来自Stage 2，未生成视频不等于内容尚未验收。"],
     ["有问题才显示备注列；逐行使用🔴阻塞、🟠风险、🟡待确认、🔵提醒；Markdown是权威底稿。"],
   ];
   info.getRange(`A12:${endColumn}15`).format = { fill: "#F2F7F9", wrapText: true, verticalAlignment: "center" };
@@ -119,16 +122,15 @@ async function main() {
   info.getRange(`A12:${endColumn}15`).format.rowHeight = 28;
 
   sheet.getRange(`A1:${endColumn}1`).merge();
-  sheet.getRange("A1").values = [[`${meta.project || "项目"}｜Stage 3 ${meta.status || "draft"}`]];
-  sheet.getRange(`A1:${endColumn}1`).format = { fill: "#162B3A", font: { name: "Aptos Display", size: 16, bold: true, color: "#FFFFFF" } };
+  sheet.getRange("A1").values = [[`${meta.project || "项目"}｜Stage 3 ${statusLabel}`]];
+  sheet.getRange(`A1:${endColumn}1`).format = { fill: "#162B3A", font: { name: "Arial", size: 16, bold: true, color: "#FFFFFF" } };
   sheet.getRange(`A3:${endColumn}3`).values = [headers];
   sheet.getRange(`A3:${endColumn}3`).format = { fill: "#276678", font: { bold: true, color: "#FFFFFF" }, horizontalAlignment: "center", verticalAlignment: "center" };
   const lastRow = rows.length + 3;
   sheet.getRange(`A4:${endColumn}${lastRow}`).values = rows;
-  sheet.getRange(`A4:${endColumn}${lastRow}`).format = { font: { name: "Aptos", size: 10, color: "#1F2933" }, wrapText: true, verticalAlignment: "top", borders: { insideHorizontal: { style: "thin", color: "#D7E1E7" } } };
+  sheet.getRange(`A4:${endColumn}${lastRow}`).format = { font: { name: "Arial", size: 10, color: "#1F2933" }, wrapText: true, verticalAlignment: "top", borders: { insideHorizontal: { style: "thin", color: "#D7E1E7" } } };
   sheet.getRange(`A4:C${lastRow}`).format.horizontalAlignment = "center";
   sheet.getRange(`C4:C${lastRow}`).format.numberFormat = "0.0\"s\"";
-  sheet.getRange(`A4:${endColumn}${lastRow}`).format.rowHeight = 250;
   sheet.getRange("A:A").format.columnWidth = 12;
   sheet.getRange("B:B").format.columnWidth = 12;
   sheet.getRange("C:C").format.columnWidth = 10;
@@ -139,6 +141,18 @@ async function main() {
   sheet.freezePanes.freezeColumns(2);
   const table = sheet.tables.add(`A3:${endColumn}${lastRow}`, true, "SeedancePrompts");
   table.style = "TableStyleMedium2";
+  // Measure wrapped content after widths and styles are final. A fixed 250pt
+  // row hid the final prompt blocks even though the saved cell was complete.
+  sheet.getRange(`A4:${endColumn}${lastRow}`).format.autofitRows();
+  // The renderer's fit underestimates CJK wrapping in native spreadsheet apps.
+  // Keep a line-height allowance without shortening the cell's source text.
+  for (let row = 4; row <= lastRow; row += 1) {
+    const format = sheet.getRange(`A${row}:${endColumn}${row}`).format;
+    format.rowHeight = Math.ceil(format.rowHeight * 1.35 + 12);
+  }
+  info.getRange("A3:B9").format.wrapText = true;
+  info.getRange("A3:B9").format.autofitRows();
+  workbook.recalculate();
 
   const outputPath = path.resolve(args.output);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });

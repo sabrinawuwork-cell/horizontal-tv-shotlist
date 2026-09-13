@@ -45,6 +45,10 @@ def _cards(text: str) -> tuple[list[tuple[str, str, int]], list[str]]:
     for position, index in enumerate(heading_indexes):
         name = re.sub(r"^###\s+", "", lines[index].strip()).strip()
         end = heading_indexes[position + 1] if position + 1 < len(heading_indexes) else len(lines)
+        # A following peer/parent heading ends the card. Do not absorb review
+        # notes or other sections into text that will be copied to the model.
+        end = next((i for i in range(index + 1, end)
+                    if re.match(r'^#{1,3}\s+\S', lines[i].strip())), end)
         body_lines = [line.strip() for line in lines[index + 1:end] if line.strip()]
         prompt = "<br>".join(body_lines)
         cards.append((name, prompt, index + 1))

@@ -14,6 +14,21 @@ import validate_v2_stage2
 
 
 class V2IterationValidationTests(unittest.TestCase):
+    def test_emotion_calibration_matches_optional_runtime_block(self) -> None:
+        for present in (False, True):
+            with self.subTest(has_emotion=present):
+                case = {
+                    "id": "optional-emotion",
+                    "kind": "conditional_categories",
+                    "sample": {"independent_performance": True, "pure_function": False,
+                               "has_emotion": present, "has_extras": False},
+                    "expected_valid": True,
+                }
+                self.assertTrue(validate_v2_prompts.evaluate_case(case)[0])
+        case["sample"]["pure_function"] = True
+        case["expected_valid"] = False
+        self.assertTrue(validate_v2_prompts.evaluate_case(case)[0])
+
     def test_voice_reference_is_opt_in(self) -> None:
         prompt = (
             "0-4秒。65mm，角色中近景，眼平固定镜头。\n\n"
@@ -36,17 +51,19 @@ class V2IterationValidationTests(unittest.TestCase):
             )
         )
 
-    def test_picture_must_not_prewrite_landing_frame(self) -> None:
-        prompt = (
-            "0-4秒。50mm，角色中景，眼平固定镜头。\n\n"
-            "画面：角色位于画面左侧，镜头最终停在其脸上。\n\n"
-            "动作/表情：角色向自身右侧转头。\n\n"
-            "声音：N/A。\n\n"
-            "无配乐无字幕"
-        )
-        self.assertTrue(any("只能写起幅" in item for item in validate_v2_prompts.prompt_errors(prompt, set())))
+    def test_scene_words_do_not_stand_in_for_temporal_review(self) -> None:
+        for state in ('桌面中央放着最终版名单', '桌面上放着落幅示意图', '桌上的摄影机停止指示灯亮着'):
+            prompt = (f"0-4秒。50mm，桌面特写，俯拍固定镜头。\n\n画面：{state}。\n\n"
+                      "动作/表情：物件保持不动。\n\n声音：N/A。\n\n无配乐无字幕")
+            with self.subTest(state=state):
+                self.assertEqual(validate_v2_prompts.prompt_errors(prompt, set()), [])
 
-    def test_dialogue_is_compared_against_stage1(self) -> None:
+    def test_prompt_validation_does_not_require_a_restriction_password(self) -> None:
+        prompt = "0-4秒。50mm，物件特写，俯拍固定。\n\n画面：碗在桌上。\n\n动作/表情：碗保持不动。\n\n声音：N/A。\n\n"
+        for tail in ('无配乐无字幕。', '无配乐，无字幕。', '无配乐；无字幕', '无配乐 无字幕！', '不添加配乐和字幕。', ''):
+            self.assertEqual(validate_v2_prompts.prompt_errors(prompt + tail, set()), [])
+
+    def test_incomplete_chain_cannot_claim_dialogue_check(self) -> None:
         stage1 = """---
 artifact: horizontal-tv-shotlist
 project: anonymous
@@ -89,7 +106,7 @@ dialogue_sensitive_authorizations: none
             stage1_path.write_text(stage1, encoding="utf-8")
             stage3_path.write_text(stage3, encoding="utf-8")
             errors = validate_v2_prompts.validate_stage3(stage3_path, stage1_path=stage1_path)
-        self.assertTrue(any("遗漏或改写Stage 1原始台词" in item for item in errors))
+        self.assertTrue(any("对白清单" in item or "发声记录" in item for item in errors), errors)
 
     def test_anonymous_regressions_pass(self) -> None:
         self.assertEqual(validate_v2_prompts.run_self_tests(ROOT), [])

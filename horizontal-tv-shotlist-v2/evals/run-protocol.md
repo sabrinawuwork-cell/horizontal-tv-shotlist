@@ -1,29 +1,39 @@
-# Horizontal Evaluation Run Protocol
+# 对照、回归与前向验证
 
-## 固定条件
+原问题及后续反馈共同界定任务，例子不是范围上限。当前阶段和批准范围以实际用户要求为准，不把测试提示中的旧流程当作另一套权威。
 
-- 为基线与实验版使用相同模型、推理强度、原始剧本、参考资产、拍摄语言、画幅和用户提示。
-- 每个版本在独立新上下文中运行两次，不允许候选看见其他输出，不从两次中择优。
-- 开发集可以诊断和修改；候选冻结后才启封留出集。私有源、输出和标签不得进入`dist`或安装包。
+## 项目验收单位
 
-## Stage 1 提示
+项目级验收看正常完整流程之后的最终分镜、提示词、任务/文件交付与返工。正常流程包含按既定方法自主进行的内容复核和修订；不要求首稿零错误，不把全部评后修订排除在能力证据之外。只跑Stage1的对照仍可评价该阶段，但不代表完整流程验收。
 
-```text
-Use $horizontal-tv-shotlist from the supplied skill folder. Read the complete attached episode and the supplied scene images, then create the requested Chinese seven-column director shotlist for a North American single-camera horizontal streaming series. Establish the scene map, base camera/axis and far-side key from the images. Preserve every source line and event. Keep exact dialogue inside 画面内容. Use only 场次 | 镜号 | 时长 | 摄影机 | 画面内容 | 音效 | 剪辑衔接. In 摄影机, write 主体＋景别 → numeric focal length such as 50mm → camera position relative to the visible subject → height and angle → fixed/handheld/movement. Do not write full-frame-equivalent, dirty single, clean single, dirty foreground or half-axis labels. For an over-the-shoulder shot, name whose left/right shoulder is crossed and who is photographed; for any other blurred foreground, name the visible person or object directly. Keep the camera description concise and place movement timing, trigger, path and final stop in the natural-language 画面内容 paragraph. In intimacy, ambiguity, emotional push-pull and two/three-character relationship scenes, do not let repeated two-shots replace key single shots, affected-character reactions or motivated details. Keep most shots at 5–10 seconds; use 10–20 seconds sparingly. Do not create 20–30 second shots or shots with more than four active characters unless the user authorizes the exact shot ID. Never exceed 30 seconds. Deliver Stage 1 only.
-```
+先明确运行版本、输入、工具/资源、正常复核修订方式和最终停止条件，再开始对照。评测中改运行方法、给单一候选追加机会、主持额外指定具体机位/切点/修复答案，须作为干预单列；干预后的稿件可以验内容与局部修复，不能混作原正常流程的通用收益。不为取得通过反复追加样例或修改规则。
 
-## Stage 2 提示
+基线和候选各按自己的正常流程完成，不强迫基线采用新版步骤或字段。最终内容评审与生产流程内复核分开；前者判断终稿，不在评分期间再给候选补救。首稿仅作为定位问题和计量返工的过程记录，不是唯一验收产物。
 
-```text
-Use $horizontal-tv-shotlist from the supplied skill folder. Treat the attached Stage 1 approved shotlist and reference images as authority. For each scene, draft concise Chinese fixed-category cards for every speaking character's required base voice; add scene/phase voice state only when it remains stable across a continuous phase. Define lighting by character/camera/orientation relationship and background by camera direction. Keep them separate by default, but use one fixed-visual card when lighting, background, environment or extras are physically inseparable. Infer stable lux/K ranges from the scene image when appropriate; for dynamic flashing or continuously changing sources, prioritize direction, contrast, color relation and exposure result. Add only factually required environment, extras/onlookers and scene sound. Do not list applicable shot IDs, do not include 无配乐无字幕, generic skin-quality tails, or temporary red/blue-marker restrictions. Deliver Stage 2 draft only and wait for scene-level approval.
-```
+## 冻结条件
 
-## Stage 3 提示
+基线和候选使用相同完整剧本、参考资产、制作条件、语言、画幅、模型及推理设置。按本次限定验证需要在独立上下文运行，不提供其他候选、预期拍法或先前排名。冻结后使用具有代表性且包含未参与定向修补的材料，保留首次稿、正常修订和最终交付；正常复核机会与资源保持可比，不比较一份额外补救稿与另一份未获同等机会的稿。
 
-```text
-Use $horizontal-tv-shotlist from the supplied skill folder. Compile only the approved Stage 1 main sequence using the approved Stage 2 fixed categories. Plan globally numbered Seedance 2.5 segments in this order: forced boundary, indivisible Stage 1 shot, 30-second hard limit, subject stability, continuous-action integrity, then the 27–30-second preferred target. Count unique identities: the same character, physical scene or independently referenced repeated key prop counts once; a silent identifiable functional person still counts once even when used as a person-prop. Keep 1–8 subjects as the stable range, flag 9–12 on the segment first row and prefer a whole-shot split, and stop for confirmation if one indivisible shot exceeds 12. Every Stage 1 shot must remain whole inside one segment. Output 镜号 | 片段 | 时长 | 分镜内容 | Seedance提示词, adding 备注 only when any blocker, risk, pending confirmation or reminder exists. Use one line per issue with 🔴/🟠/🟡/🔵 severity markers, and put segment-level issues only on the segment first row. Start every shot prompt with its cumulative time range inside the segment, reset each segment to 0, separate categories with a blank line, and omit Stage 1 editing transitions. In draft, show only concise fixed-category names for user classification review. Add 保留真实的微细毛孔、肌肤纹理与皮肤质感。 only when skin is visible, and add temporary negative restrictions only when the user explicitly requests them for Stage 3. After approval, mechanically replace fixed-category names with the exact Stage 2 approved card text, change nothing else, and keep exactly one 无配乐无字幕 at the final end of every shot prompt.
-```
+## 生成请求
 
-## 发布门禁
+Stage 1：使用所给V2技能，根据完整权威范围及原始素材独立完成指定场面的导演设计与七列分镜。不要在请求中预设机位、秒数、镜数或某个情绪对应的镜型。按实际规则区分事实缺失与开放选择，保留限制，停止于本次指定阶段。
 
-先运行结构、映射、项目状态与 Excel 检查，再使用`rubric.md`盲评全部 10 类以上场景和完整一集。所有硬错误清零、综合至少 85、三项创作门禁至少 8/10，并取得用户对代表性结果的批准后，才构建并安装发行包。
+Stage 2：使用已批准的Stage 1及其实际输入/方案，按当前项目策略提取需要稳定控制的条件。一类一卡，不强制音色、光影、背景或其他类别。保留必要性判断与当前阶段状态，不恢复废止的固定视觉复合卡。
+
+Stage 3：在当前Stage 1/2批准及真实来源成立后，执行当前V2编译与生成任务协议。保留成片顺序、原文与已定声画关系，直接输出approved或明确阻塞，不重新引入draft审核、旧固定类别占位符或忽略剪辑。实际生成另按明确的模型入口和预算执行。
+
+## 评审与真实制作
+
+按 rubric.md 先核对完整性，现在就评价导演设计、分镜、提示词与修订交付；视频模型执行另列，不因未生成而延后内容判断。旧规则中的独立镜型、默认秒数、光影数值或音色偏好不得成为额外加减分。冻结匿名标签，独立审阅后再揭晓。自动检测不负责证明语义和审美，评审分数也不证明程序与文件操作正确。
+
+内容评审先看实际产物，再对照方案与完整来源。提示词应按真正交给模型的任务正文/参考评自足性，不能把源文件清单当作已经随任务发送。对原有能力、确证bug、需求兑现和返工分别作判断；保留具体首次失败、自修及后续修改范围，不以测试数或未经计量的耗时估计代替收益。合法表达被门禁拒绝时，查明门禁适用性再修，不能为了过检新增无依据的创作内容。
+
+记录最终残余的重要缺陷、正常修订轮次及改动范围、用户/主持额外介入和可核实工作量。仅镜头变少、时长变短或记录更多不等于返工减少；没有工时证据时不报节省比例。目标是保住旧能力、兑现需求并判断具体改善；创作质量守住且重要bug/返工减少也可支持采用，不额外要求统计显著或每个创作维度均胜出。真实视频暂停不阻塞上述文本与流程验收，原例同版资料不足也不阻塞所有新输入判断。
+
+覆盖本次风险组合：双人/高差与视点变化、群戏及信息传播、接触/道具/身体限制、不同情绪与节奏、场景/光态变化、真实制作编排和局部修订。还要验证完整集的跨场承接。每条原问题明确对应证据；不能取得历史同版素材时如实标记，合成反例不冒充原片复现。
+
+实际制作比较时保持入口、模型、素材、预算和修复机会相同，记录可用率、错误类型、重试/返工及表达损失。按成片主序列剪回后再判断声画和连续性。区分设计不成立、落实/转译丢失、参考错误、模型执行偏差和剪接错误，回到真正负责的环节修订。
+
+## 交付边界
+
+先检查受影响的运行入口、文件来源与操作，再以完整产物证明相应行为。当前技术测试、前向文本、真实生成及成片分别报告，不把任何一项叫作全部验收。知识与源格式的历史快照保留；私有测试数据、标签与真实项目资料不进入发行包。未验证或失败的项目不默认为通过，也不靠不断新增测试数量代替修好问题。

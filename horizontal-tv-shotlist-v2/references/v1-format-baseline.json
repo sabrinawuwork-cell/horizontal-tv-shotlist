@@ -37,5 +37,22 @@
     "scripts/validate_seedance_rules_master.py": "48c0169efebf3f2e089edfc34885937898a4b3005deb6025ca06681a2a47a756",
     "scripts/validate_shotlist.py": "d9af859f7df6f19cd77f95f8a2b6f26452c378c92a63a975241bd1ac6cab7040",
     "scripts/validate_stage2_fixed_prompts.py": "a4fe4a7f95c8bcf02956e29ca6eb9eea4c16c4ca6c1bc5b21e14ea164c9d5d77"
+  },
+  "authorized_method_updates": {
+    "decision": "2026-09-08/11: user-approved Issue #11 closeout; directing/state reasoning, optional concrete framing calculations and receive-first delivery review; professional formats and master core retained; 2026-09-13 user-approved checker rebuild candidate, validation pending",
+    "files": {
+      "references/ai-production-constraints.md": "8c68b1f84758ea55155166e85bab925397ab6d54e65c004d03e44daf070481dd",
+      "references/continuity-checklist.md": "67476cc87a2e9e987c20a576147167148ee909a2d08f1d6727b1da33af602a80",
+      "references/director-core.md": "1f56d765524d7125ef5b0ea5a859270d1c3a74bffe07adea39fce642eb169dce",
+      "references/horizontal-shot-language-rules.md": "f6d3c73879d7102d0a15b9837abb3c09f51e2b78b264759768fa2dd2c6e83bb0",
+      "references/north-american-single-camera.md": "9fff3907bd7d73c1f53bd20c9d579e35c7523f27e5ad83e703678bc9f212d41a",
+      "references/output-schema.md": "3ea3c6b816983583db18670cd1ff164027eeaed99b6ae93fca55388965905fab",
+      "references/scene-templates.md": "842cf4548cf41ee2cac11fc6214f4f9f5570c3d2348ce1455d5cb3c46a69c05f",
+      "references/stage1-camera-picture-writing.md": "6bb6a48afb21fe2b31ece35a95ffd137f522c5d5a4b4282ad3314b0a8cced510",
+      "scripts/validate_shotlist.py": "a60500c338795d4da95585ebf560541023b92a7db2f8fe94e4499889afc09583",
+      "scripts/build_stage3_xlsx.mjs": "aa8267732011b82badaa7b980c46fd4617bc3e408f301a2980f4664c714d1e74",
+      "scripts/validate_stage2_fixed_prompts.py": "ca39becabfc3ba5db899c620bc33977f2cec3aec4f22baa679634fe6dfae2b52",
+      "examples/stage2-category-cards.md": "441ff0fc573d00c4bf1c1474d65bad42e9e21db32d54406c8c8219a817b5eb2e"
+    }
   }
 }
