@@ -149,6 +149,8 @@ def stage3_authority(path: Path, rows: list[tuple[str, ...]], stage1: Path | Non
     hashes = [x.strip() for x in re.split('[,，]', front.get('stage2_sha256', '')) if x.strip()]
     if not names or len(names) != len(hashes):
         errors.append('Stage 3 必须按顺序列出全部 Stage 2 文件及对应摘要')
+    from stage3_canvas import enabled, scenes, scoped_label
+    canvas = scenes(read_text(path)) if enabled(read_text(path)) else {}
     cards_by_scene: dict[str, dict[str, str]] = {}
     for index, name in enumerate(names):
         source2 = source_file(path, name, 'Stage 3 的 Stage 2', errors)
@@ -168,6 +170,31 @@ def stage3_authority(path: Path, rows: list[tuple[str, ...]], stage1: Path | Non
         cards, card_errors = _cards(text2)
         errors.extend(card_errors)
         cards_by_scene[scene] = {name: normalized_breaks(content) for name, content, _ in cards}
+        for section, (cell, _) in canvas.items():
+            if section.partition('（')[0] != scene:
+                continue
+            scoped = [scoped_label(line.partition('：')[0]) for line in cell.splitlines()]
+            scoped_kinds = {entry[1] for entry in scoped if entry}
+            if (f2.get('extras_required') == 'yes' and '全局群演动作：' not in cell
+                    and '动作参考' not in scoped_kinds):
+                errors.append(f'场次 {scene} 已确定有群演，须包含群演外观和动作')
+            # The source category and its text can carry several separate lines.
+            compact = re.sub(r'\s+', '', cell)
+            for name, content in cards_by_scene[scene].items():
+                for line in re.split(r'<br\s*/?>|\n', content, flags=re.I):
+                    body = line.partition('：')[2] or line
+                    source_body = re.sub(r'\s+', '', body)
+                    if source_body in compact:
+                        continue
+                    # Mixed-scope cards may distribute clauses and enumerated subjects
+                    # across several named references. Every source fragment must survive.
+                    if scoped_kinds and name.partition('·')[0] in ('环境', '群演外观', '群演动作'):
+                        fragments = [v for v in re.split(r'[，,。；;、]', source_body) if v]
+                        if fragments and all(v in compact for v in fragments):
+                            continue
+                    if source_body:
+                        errors.append(f'场次 {scene} 全局提示词未完整收录已批准卡片 {name}')
+                        break
     if set(cards_by_scene) != {r[0] for r in expected}:
         errors.append('Stage 2 必须覆盖全部且仅当前 Stage 1 场次')
     bindings = {}
@@ -215,7 +242,7 @@ def stage3_authority(path: Path, rows: list[tuple[str, ...]], stage1: Path | Non
         speech, speech_errors = speech_by_shot(expected, declaration)
         errors.extend(speech_errors)
     sources = source_map | {'_cards': cards_by_scene, '_exceptions': exceptions,
-                            '_bindings': bindings, '_speech': speech}
+                            '_bindings': bindings, '_speech': speech, '_canvas': bool(canvas)}
 
     from shot_revision import numbering_errors
     revision_errors, revision = numbering_errors(stage1, text1)
@@ -315,11 +342,21 @@ def mapping_errors(rows: list[tuple[str, ...]], sources: dict) -> list[str]:
                                if isinstance(e, dict) and isinstance(e.get('text'), str)]
             expected_visuals = visual_blocks(approved_cards + exception_texts)
             actual_visuals = visual_blocks(parts)
+            if sources.get('_canvas'):
+                # Approved cards are already present in the scene cell. A shot
+                # may repeat its selected category, but must retain exceptions.
+                # A requested lighting exception can be embedded in the opening composition.
+                opening = next((b for b in parts if b.startswith('画面：')), '')
+                exception_texts = [v for v in exception_texts if not (
+                    v.startswith('光影：') and v.removeprefix('光影：') in opening)]
+                repeated = {v.split('：', 1)[0] for v in actual_visuals}
+                expected_visuals = visual_blocks([v for v in approved_cards
+                    if v.split('：', 1)[0] in repeated] + exception_texts)
             if actual_visuals != expected_visuals:
                 errors.append(f'镜头{shot}：固定条件正文与已选卡片/单镜例外不一致，允许合并类别标签但不得改写或遗漏正文')
             sound_block = next((b for b in parts if b.startswith('声音：')), '')
             for card in approved_cards:
-                if card.startswith(('声音：', '音色：', '音色状态：')) and not contains_sound_unit(sound_block, card):
+                if not sources.get('_canvas') and card.startswith(('声音：', '音色：', '音色状态：')) and not contains_sound_unit(sound_block, card):
                     errors.append(f'镜头{shot}：未完整展开编译记录中选定的固定声音/音色卡')
             for name, card in available_cards.items():
                 if name not in selected and card.startswith(('声音：', '音色：', '音色状态：')) and contains_sound_unit(sound_block, card):

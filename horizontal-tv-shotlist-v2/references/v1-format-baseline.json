@@ -50,7 +50,7 @@
       "references/scene-templates.md": "842cf4548cf41ee2cac11fc6214f4f9f5570c3d2348ce1455d5cb3c46a69c05f",
       "references/stage1-camera-picture-writing.md": "6bb6a48afb21fe2b31ece35a95ffd137f522c5d5a4b4282ad3314b0a8cced510",
       "scripts/validate_shotlist.py": "a60500c338795d4da95585ebf560541023b92a7db2f8fe94e4499889afc09583",
-      "scripts/build_stage3_xlsx.mjs": "aa8267732011b82badaa7b980c46fd4617bc3e408f301a2980f4664c714d1e74",
+      "scripts/build_stage3_xlsx.mjs": "4cda57b734e3b219c0863bad63d1aef442923cf9d8f14fdb3c18dff5f2ff4768",
       "scripts/validate_stage2_fixed_prompts.py": "ca39becabfc3ba5db899c620bc33977f2cec3aec4f22baa679634fe6dfae2b52",
       "examples/stage2-category-cards.md": "441ff0fc573d00c4bf1c1474d65bad42e9e21db32d54406c8c8219a817b5eb2e"
     }

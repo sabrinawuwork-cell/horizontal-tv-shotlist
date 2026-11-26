@@ -385,6 +385,9 @@ def compile_delivery(stage3: Path, output_dir: Path, *, allow_voice_reference: b
         raise ValueError('\n'.join(errors))
     text = snapshot.texts[stage3]
     plan = sources.get('_generation_plan')
+    from stage3_canvas import enabled, scenes
+    canvas = scenes(text) if enabled(text) else {}
+    section_by_shot = {row[0]: section for section, (_, table) in canvas.items() for row in table.rows}
     tasks = plan['tasks'] if plan else _legacy_tasks(rows)
     row_map = {row[0]: row for row in rows}
     files: dict[str, str] = {}
@@ -393,7 +396,13 @@ def compile_delivery(stage3: Path, output_dir: Path, *, allow_voice_reference: b
     clip_lookup = {}
     for index, task in enumerate(tasks, 1):
         common = _common_visuals(task['clips'], row_map, sources)
-        sections = [TASK_REQUIREMENT, f"时长：{task['duration']}秒。"]
+        global_prompt = TASK_REQUIREMENT
+        if canvas:
+            sections_used = {section_by_shot[clip['shot']] for clip in task['clips']}
+            if len(sections_used) != 1:
+                raise ValueError(f"{task['id']} 跨越场次或续段，须分开生成")
+            global_prompt = canvas[sections_used.pop()][0]
+        sections = [global_prompt, f"时长：{task['duration']}秒。"]
         if task['references']:
             sections.append('参考素材：\n' + '\n'.join(f"{ref['label']}：{ref['use']}" for ref in task['references']))
         if common:

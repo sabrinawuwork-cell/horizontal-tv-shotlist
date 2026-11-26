@@ -79,6 +79,10 @@ async function main() {
   const args = argsOf(process.argv.slice(2));
   const text = await fs.readFile(args.input, "utf8");
   const meta = frontmatter(text);
+  if (meta.stage3_layout === "scene-canvas" || /^\s*\|\s*场次\s*\d+\s*全局提示词\s*\|/m.test(text)) {
+    const { writeCanvas } = await import("./stage3_canvas_xlsx.mjs");
+    return writeCanvas(args);
+  }
   const statusLabel = meta.validation_scope === "offline-evaluation"
     ? `${meta.status || "draft"}（离线模拟阶段批准；未生产批准）`
     : meta.status || "draft";

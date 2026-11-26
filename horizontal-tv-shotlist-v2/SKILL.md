@@ -40,11 +40,15 @@ Stage 1 已批准后，读取其引用的当前导演方案和[极简固定条�
 
 真实光源、人物朝向及其受光关系与当前机位看到的背景分开判断。普通光影卡不强制携带背景；背景按已决定的当前取景和实际复用需要处理，不能为了复用固定卡而改机位或人物位置。音色默认不创建，只有当前任务明确启用时建立。
 
-Stage 2 不改动 Stage 1 的摄影机、调度、动作、表演、对白或剪辑。场次整体批准后才能进入 Stage 3，使用 `scripts/validate_v2_stage2.py` 检查实际来源与卡片。
+Stage 2 不改动 Stage 1 的摄影机、调度、动作、表演、对白或剪辑。正式制作交接在场次整体批准后进入 Stage 3，使用 `scripts/validate_v2_stage2.py` 检查实际来源与卡片。
 
 ## Stage 3：忠实展开为视频镜头
 
-Stage 1 与当前场次 Stage 2 已批准后，读取当前导演方案和 Stage 1 的完整镜头及剪辑意图，再完整读取[V2 Seedance 母版](references/v2-seedance-prompt-rules-master.md)、[Stage 3 Schema](references/v2-stage3-schema.md)、[Seedance 2.5 适配](references/v2-model-seedance-2.5.md)、[Stage 3 补充](references/v2-stage3-authorized-additions.md)及[平台安全语言](references/platform-safety-language.md)。母版 `Core Rules — Full Canonical Version` 核心字节保持不变。情感解析保留现行可选机制：有助落实已定表演意图时使用，不因有人表演便必填，不重复已经表达清楚的动作含义。
+只有 Stage 1 时，按现有镜序出 Stage 3 测试表。保留所有适用类目及场景、人物引用，缺少 Stage 2 的具体内容留空；用 `stage2_content: categories-only` 标识并按画布表规范导出。
+
+本阶段新稿使用[场次全局单元格与逐镜表演规范](references/stage3-canvas.md)，写入 `stage3_layout: scene-canvas`。每场先交一格全局正文。“视觉风格：”保留空栏；项目已根据剧本确定风格且本次需要填写时，再写具体内容。已批准的布光条件集中在全局光影参考。仅在用户明确要求逐镜写光时，将指定镜头的光影写入【画面】。场景和人物逐项写“名称参考”，每项后留两个半角空格，项间用中文分号。室外环境按场地分行，每类群演的外观、动作各占一行，标题直接写明对象。逐镜以原分镜为底稿扩写，保留主体、持物关系、动作、原话和起落幅；逐镜正文中人物名、道具名按正常行文书写，名称后不加占位空格。梗概保留，以主体为机位参照，画面只写起幅，动作/表情按人物与摄影机的真实先后展开，每镜紧接情感解析。此规则更新以下历史规范中的相关排版、固定尾句及可选情感解析约定。
+
+Stage 1 与当前场次 Stage 2 已批准后，读取当前导演方案和 Stage 1 的完整镜头及剪辑意图，再完整读取[V2 Seedance 母版](references/v2-seedance-prompt-rules-master.md)、[Stage 3 Schema](references/v2-stage3-schema.md)、[Seedance 2.5 适配](references/v2-model-seedance-2.5.md)、[Stage 3 补充](references/v2-stage3-authorized-additions.md)及[平台安全语言](references/platform-safety-language.md)。母版 `Core Rules — Full Canonical Version` 核心字节保持不变。场次画布表按镜头交付情感解析，紧接动作/表情。
 
 先按[生成任务与素材映射](references/generation-task-schema.md)组织制作。成片表保持Stage 1顺序，片段列指向生成任务；显式、摘要绑定的计划可让主表演素材在独立反应后被再次引用。任务内时码与成片时间分别记录。当前仍保持每个Stage 1镜头完整落入一个不超过30秒的任务；尚不支持延长链或单镜多次调用，不静默改变镜头。无计划的旧稿沿用连续片段规则。常规任务取舍为强制边界 → 单镜完整 → 30秒上限 → 主体风险 → 连续表演 → 27–30秒优先目标。换场、场景、集或工作表开启新片段，编号全局连续。主体按唯一身份计数，1–8按保守常规范围规划（不是成功保证）、9–12提示风险，超过12优先分片；单个不可拆镜超过12时请用户确认。
 
@@ -54,7 +58,7 @@ Stage 1 与当前场次 Stage 2 已批准后，读取当前导演方案和 Stage
 
 预检与来源映射通过后，直接生成 Stage 3 `approved`，不生成 Stage 3 draft，不设置二次批准。保持 `镜号｜片段｜时长｜分镜内容｜Seedance提示词` 五列，仅实际风险/提醒需要时增加备注。分镜内容逐字合并 Stage 1 摄影机、画面内容与音效；提示词按需展开已批准固定卡，类别间空一行，默认无音色参考块。
 
-交付完整任务时，直接用 `scripts/generation_tasks.py --stage3 <Stage3.md> --output-dir <新目录>`；该入口已经检查实际Stage3及上游来源、映射和格式，再导出任务文本、参考清单与成片素材映射，无需对同一未变稿先重复运行独立检查。仅交付五列表、不导出任务时，使用 `scripts/validate_v2_prompts.py --stage3 <Stage3.md>`。同类视觉固定卡可合并类别标签，正文完整保留；共同固定条件只在真实适用的任务范围去重，专属卡和声画保持各自时间。每个实际独立任务开头固定为`全片要求：不添加背景配乐，不生成字幕。`，结尾保留`无配乐无字幕`，不附加其他全片要求解释。
+交付完整任务时，直接用 `scripts/generation_tasks.py --stage3 <Stage3.md> --output-dir <新目录>`；该入口已经检查实际Stage3及上游来源、映射和格式，再导出任务文本、参考清单与成片素材映射，无需对同一未变稿先重复运行独立检查。仅交付五列表、不导出任务时，使用 `scripts/validate_v2_prompts.py --stage3 <Stage3.md>`。同类视觉固定卡可合并类别标签，正文完整保留；共同固定条件只在真实适用的任务范围去重，专属卡和声画保持各自时间。场次画布模式中，每个独立任务开头使用本段所属场次的全局单元格正文，结尾保留`无配乐无字幕`，不附加其他全片要求解释。
 
 随后执行[接收式审读](references/generation-task-schema.md#接收式审读实际交付)：先仅据真实提交正文、参数和随附参考，还原观众实际经历的起幅、动作与接收、摄影和声音变化、切出及收束，检查指令是否足以执行这些过程，区分明说、可推出和未知；再对照源与上游决定核对忠实性和完整性。用这个读取顺序替换原有通读，不新增一层评审。未来才会生成的同一次对白/素材明确源镜、目标镜和后期使用关系，不伪造绑定；已知条件不能只留在来源摘要里。
 

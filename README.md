@@ -2,6 +2,8 @@
 
 本仓库只维护 [horizontal-tv-shotlist-v2](horizontal-tv-shotlist-v2/SKILL.md)。使用、修改和安装均以该目录为入口；根目录旧版已删除。
 
+Stage 3 的默认交付为逐场画布表。每场先给可整格复制的全局提示词，再按镜序给出起幅、动作与表情、情感解析和声音。缺少 Stage 2 时可从现有分镜生成测试表，缺少的卡片正文留空。[编写与导出规则](horizontal-tv-shotlist-v2/references/stage3-canvas.md) · [匿名示例](horizontal-tv-shotlist-v2/examples/stage3-canvas.md)
+
 PR提交范围已于2026-09-14整理：运行包、正式测试及fixtures完整保留，大型实验过程材料留在本机、不进入main。需要追溯时见[验证材料索引](docs/验证材料索引.md)与[整理核对](docs/PR整理核对.md)。
 
 当前阶段已结项（2026-09-13）：**Stage 1导演与分镜、Stage 2固定条件、Stage 3提示词与离线交付，以及本阶段已确认的检查器问题均已收束，继续采用当前V2。**
@@ -50,4 +52,4 @@ V2 三阶段入口还校验真实来源、当前摘要、镜头与对白完整�
 python3 horizontal-tv-shotlist-v2/scripts/build_distribution.py --output dist/horizontal-tv-shotlist-v2
 ```
 
-用户已确认“情感解析”保留现行可选机制，评测与运行语义一致；不要求逐镜必填，也不全部删除。
+场次画布表中，每镜的“动作/表情”之后紧接“情感解析”。

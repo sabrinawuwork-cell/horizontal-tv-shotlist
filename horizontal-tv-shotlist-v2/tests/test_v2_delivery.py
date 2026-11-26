@@ -87,6 +87,32 @@ class DeliveryChecks(unittest.TestCase):
         for check, path in ((check1, self.s1), (check2, self.s2), (check3, self.s3)):
             self.assertEqual(check(path), [])
 
+    def test_canvas_globals_reach_task_and_test_only_inputs_stay_separate(self):
+        from generation_tasks import compile_delivery
+        from stage3_canvas import scenes, TAIL
+        cell = ('视觉风格：<br>全局场景参考：会议室参考  <br>'
+                '全局人物参考：甲参考  ；乙参考  <br>全局光影参考：沿用会议室已定日景。<br><br>' + TAIL)
+        prefix = '| 场次 1 全局提示词 |\n| --- |\n| ' + cell + ' |\n\n'
+        text = self.s3.read_text().replace('| 镜号 |', prefix + '| 镜号 |')
+        text = text.replace('<br><br>声音：', '<br><br>情感解析：两人都希望得到回应。<br><br>声音：')
+        self.s3.write_text(text)
+        self.assertEqual(check3(self.s3), [])
+        output = self.root / 'canvas-export'
+        compile_delivery(self.s3, output)
+        task = (output / 'task-001.txt').read_text()
+        self.assertTrue(task.startswith(cell.replace('<br>', '\n')))
+        self.assertIn('甲站在画面中央', task)
+        self.assertNotIn('甲  站在', task)
+        with self.assertRaises(ValueError):
+            scenes(text.replace('甲参考  ；', '甲参考；'))
+        with self.assertRaises(ValueError):
+            scenes(text.replace('情感解析：', '补注：', 1))
+        partial = text.replace('status: approved', 'status: test\nstage2_content: categories-only')
+        partial = partial.replace('沿用会议室已定日景。', '')
+        self.assertIn('1', scenes(partial))
+        self.s3.write_text(partial)
+        self.assertTrue(check3(self.s3))
+
     def test_protected_dialogue_can_name_a_format_concept(self):
         phrase = '别越过轴线。'
         source = self.root / 'source.md'

@@ -109,6 +109,14 @@ def split_markdown_row(line: str) -> tuple[str, ...]:
 
 
 def stage3_table(text: str) -> tuple[tuple[str, ...] | None, list[tuple[str, ...]], list[str]]:
+    from stage3_canvas import enabled, scenes
+    if enabled(text):
+        try:
+            groups = scenes(text)
+        except ValueError as exc:
+            return None, [], [str(exc)]
+        header = next(iter(groups.values()))[1].headers
+        return header, [row for _, t in groups.values() for row in t.rows], []
     tables = [table for table in find_tables(text) if '镜号' in table.headers]
     if len(tables) != 1 or tables[0].headers not in STAGE3_HEADERS:
         return None, [], ['Stage 3 必须且只能有一张精确五列或条件式六列提示词表']
@@ -293,6 +301,8 @@ def checked_stage3(
     errors.extend(policy_errors)
     if front.get("status") != "approved":
         errors.append("Stage 3 V2必须直接标记status: approved")
+    if front.get('stage2_content') == 'categories-only':
+        errors.append('类目留空的测试表请使用画布导出入口；正式交接须绑定 Stage 2。')
     required_front = (
         "artifact",
         "project",
